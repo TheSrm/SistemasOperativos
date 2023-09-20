@@ -4,8 +4,6 @@
 // Ao printf non lle gusta este símbolo
 // #define PROMPT_SYMBOL ♦
 
-//top lonxitude max de comando: 14
-
 void imprPrompt(){
     printf("$\t");
 }
