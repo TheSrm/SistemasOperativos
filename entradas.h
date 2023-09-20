@@ -1,16 +1,10 @@
-//
-// Created by alumno on 20/09/2023.
-//
-
-#ifndef SHELL_ENTRADAS_H
-#define SHELL_ENTRADAS_H
-#define ENTRADA_MAX 50
+#ifndef ENTRADAS_H
+#define ENTRADAS_H
 
 #include "funcionsTemporais.h"
-
+#include "historial.h"
 
 void lerEntrada();
 void procesarEntrada();
 
 #endif
-

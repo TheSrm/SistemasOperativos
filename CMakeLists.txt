@@ -7,4 +7,6 @@ add_executable(SHELL main.c
         funcionsTemporais.c
         funcionsTemporais.h
         entradas.c
-        entradas.h)
+        entradas.h
+        historial.c
+        historial.h)
