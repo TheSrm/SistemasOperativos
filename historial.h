@@ -4,20 +4,17 @@
 #include <stdlib.h>
 
 #define ENTRADA_MAX 50
-#define HISTNULL NULL
+#define HISTNULL NULL;
 
-
-typedef struct historial* histP;
-
-typedef struct historial{
+typedef struct hNode{
     char comando[ENTRADA_MAX];
-    histP prev;
-} hist;
+    struct hNode* next;
+};
 
+typedef struct hNode* historial;
 
-
-void createHist(histP h){
-    h = HISTNULL;
-}
+historial crearHistBaleiro();
+void borrarHist(historial* h);
+void insertHist(historial* h);
 
 #endif

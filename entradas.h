@@ -4,7 +4,7 @@
 #include "funcionsTemporais.h"
 #include "historial.h"
 
-void lerEntrada();
-void procesarEntrada();
+void lerEntrada(char* entrada, historial h);
+void procesarEntrada(char* entrada);
 
 #endif
