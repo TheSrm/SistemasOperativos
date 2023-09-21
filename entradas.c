@@ -1,5 +1,4 @@
-#include <string.h>
-#include "historial.h"
+#include "entradas.h"
 
 void leerEntrada(char *entrada, historial h) {
     fgets(entrada, ENTRADA_MAX, stdin);
@@ -7,12 +6,15 @@ void leerEntrada(char *entrada, historial h) {
 }
 
 void procesarEntrada(char *entrada) {
-    //char *Trozos[3];
-    //if ((TrocearCadena(entrada,  Trozos)) == 0) {
-    if (strcmp(entrada, "time") == 0) {
+    int i;
+    char* argumentos[MAXARGS];
+    char* argPpal;
+    argPpal = strtok(entrada, " ");
+    for (i = 0; i < MAXARGS; ++i) {
+        argumentos[i] = strtok(NULL, " ");
+    }
+    if(strcmp(argPpal, "time") == 0)
         imprHora();
-    }
-    else {
+    else if(strcmp(argPpal, "date") == 0)
         imprData();
-    }
 }
