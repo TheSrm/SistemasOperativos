@@ -8,11 +8,11 @@ void imprPrompt(){
 }
 
 int main(){
-    char* entrada;
+    char* entrada = malloc(100);
 
     //while (1==1){
     imprPrompt();
-    lerEntrada(&entrada);
+    lerEntrada(entrada);
     procesarEntrada(entrada);
 
 
