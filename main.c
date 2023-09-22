@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "entradas.h"
 
 // Ao printf non lle gusta este símbolo

@@ -10,7 +10,7 @@ void procesarEntrada(char *entrada) {
     int i;
     char* argumentos[MAXARGS];
     char* argPpal;
-    argPpal = strtok(entrada, " ");
+    argPpal = strtok(entrada, " ,\n");
     for (i = 0; i < MAXARGS; ++i) {
         argumentos[i] = strtok(NULL, " ");
     }
