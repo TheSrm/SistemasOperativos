@@ -1,8 +1,9 @@
 #include "entradas.h"
 
-void leerEntrada(char *entrada, historial h) {
-    fgets(entrada, ENTRADA_MAX, stdin);
-    insertHist(&h);
+void lerEntrada(char **entrada) { // poñer hist despois, tamén no .h
+    char buffer[ENTRADA_MAX];
+    *entrada = fgets(buffer, ENTRADA_MAX, stdin);
+   // insertHist(&h);
 }
 
 void procesarEntrada(char *entrada) {

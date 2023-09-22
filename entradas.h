@@ -7,7 +7,7 @@
 #include "historial.h"
 #include <string.h>
 
-void lerEntrada(char* entrada, historial h);
+void lerEntrada(char** entrada);
 void procesarEntrada(char* entrada);
 
 #endif

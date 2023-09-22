@@ -10,9 +10,10 @@ void imprPrompt(){
 
 int main(){
     char* entrada;
+
     //while (1==1){
     imprPrompt();
-    lerEntrada(entrada);
+    lerEntrada(&entrada);
     procesarEntrada(entrada);
 
 
