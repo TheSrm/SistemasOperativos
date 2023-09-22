@@ -21,6 +21,6 @@ void procesarEntrada(char *entrada) {
     else if(strcmp(argPpal, "date") == 0)
         imprData();
     else{
-
+        printf("Comando non valido\n"); // implementar erros?
     }
 }

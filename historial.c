@@ -3,3 +3,7 @@
 historial crearHistBaleiro(){
     return HISTNULL;
 }
+
+void borrarHist(historial* h){
+
+}
