@@ -11,7 +11,7 @@ void imprData(void){
 void imprHora(){
     time_t now;
 
-    ctime(&now); // a variable toma o valor do tempo actual
+    now = time(NULL); // a variable toma o valor do tempo actual
 
     struct tm *local = localtime(&now); // convírtese o tempo time_t a unha struct cos datos separados
 
