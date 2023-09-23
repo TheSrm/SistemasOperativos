@@ -1,8 +1,7 @@
 #ifndef HISTORIAL_H
 #define HISTORIAL_H
 
-#include <stdlib.h>
-#include <string.h>
+#include "definicionsBase.h"
 
 #define ENTRADA_MAX 50
 #define HISTNULL NULL

@@ -1,5 +1,4 @@
 #include "entradas.h"
-#include <stdbool.h>
 
 // Ao printf non lle gusta este símbolo
 // #define PROMPT_SYMBOL ♦
@@ -15,7 +14,7 @@ int main(){
     while (!rematado){
         imprPrompt();
         lerEntrada(entrada);
-        procesarEntrada(entrada);
+        procesarEntrada(entrada, &rematado);
     }
 
     return 0;

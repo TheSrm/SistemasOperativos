@@ -9,4 +9,10 @@ add_executable(SHELL main.c
         entradas.c
         entradas.h
         historial.c
-        historial.h)
+        historial.h
+        autores.c
+        autores.h
+        procesos.c
+        procesos.h
+        definicionsBase.h
+)

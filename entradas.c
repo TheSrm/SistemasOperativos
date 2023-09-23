@@ -1,15 +1,19 @@
 #include "entradas.h"
 
+void shutDown (bool* rematado){
+    *rematado = true;
+}
+
 void lerEntrada(char *entrada) { // poñer hist despois, tamén no .h
     char buffer[ENTRADA_MAX];
     fgets(entrada, ENTRADA_MAX, stdin);
    // insertHist(&h);
 }
 
-void procesarEntrada(char *entrada) {
+void procesarEntrada(char *entrada, bool* rematado) {
     int i;
-    char* argumentos[MAXARGS];
-    char* argPpal;
+    char* argPpal, *argumentos[MAXARGS];
+
 
     argPpal = strtok(entrada, " \n\t");
 
@@ -20,7 +24,11 @@ void procesarEntrada(char *entrada) {
         imprHora();
     else if(strcmp(argPpal, "date") == 0)
         imprData();
+    else if(strcmp(argPpal, "authors") == 0)
+        authors(argumentos);
+    else if(strcmp(argPpal,"quit") + strcmp(argPpal,"exit") + strcmp(argPpal,"bye") == 0)
+        shutDown(rematado);
     else{
-        printf("Comando non valido\n"); // implementar erros?
+        printf("Comando invalido\n"); // implementar erros?
     }
 }
