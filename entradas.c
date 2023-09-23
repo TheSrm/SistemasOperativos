@@ -26,8 +26,10 @@ void procesarEntrada(char *entrada, bool* rematado) {
         imprData();
     else if(strcmp(argPpal, "authors") == 0)
         authors(argumentos);
-    else if(strcmp(argPpal,"quit") + strcmp(argPpal,"exit") + strcmp(argPpal,"bye") == 0)
+    else if(strcmp(argPpal,"quit") + strcmp(argPpal,"exit") + strcmp(argPpal,"bye") == 0) {
         shutDown(rematado);
+        free(entrada);
+    }
     else{
         printf("Comando invalido\n"); // implementar erros?
     }
