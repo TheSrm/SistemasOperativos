@@ -53,7 +53,7 @@ void Cmd_close (char *argumentos[]){
 
 }
 
-void Cmd_dup (char * argumentos[],struct ListOpenFiles){
+void Cmd_dup (char * argumentos[]){
     int df, duplicado;
     char aux[],*p;
 
