@@ -12,10 +12,35 @@ void pid(char *argumentos[MAXARGS]) {
 
 }
 
+void infosys(){
+        struct utsname Datos_del_ordenador;
+
+        if (uname(&Datos_del_ordenador) != 0) {
+            perror("Error retrieving system information");
+            return;
+        }
+
+        printf("System Information:\n");
+        printf("  - Operating System: %s\n", Datos_del_ordenador.sysname);
+        printf("  - Node Name: %s\n", Datos_del_ordenador.nodename);
+        printf("  - Release: %s\n", Datos_del_ordenador.release);
+        printf("  - Version: %s\n", Datos_del_ordenador.version);
+        printf("  - Machine: %s\n", Datos_del_ordenador.machine);
+
+        long procesadores = sysconf(_SC_NPROCESSORS_ONLN);
+        if (procesadores <0) {
+            printf("Number of Processors: %ld\n", procesadores);
+        } else {
+            perror("Error retrieving number of processors");
+        }
+}
+
+
+/*
 void Cmd_open (char * argumentos[]) {
     int i, df, mode = 0;
 
-    if (argumentos[0] == NULL) { /*no hay parametro*/
+    if (argumentos[0] == NULL) { //no hay parametro
         ..............ListarFicherosAbiertos...............
         return;
     }
@@ -41,8 +66,8 @@ void Cmd_open (char * argumentos[]) {
 void Cmd_close (char *argumentos[]){
     int df;
 
-    if (argumentos[0]==NULL || (df=atoi(argumentos[0]))<0) { /*no hay parametro*/
-        ..............ListarFicherosAbiertos............... /*o el descriptor es menor que 0*/
+    if (argumentos[0]==NULL || (df=atoi(argumentos[0]))<0) { //no hay parametro
+        ..............ListarFicherosAbiertos............... //o el descriptor es menor que 0
         return;
     }
 
@@ -57,9 +82,9 @@ void Cmd_dup (char * argumentos[]){
     int df, duplicado;
     char aux[],*p;
 
-    if (argumentos[0]==NULL || (df=atoi(argumentos[0]))<0) { /*no hay parametro*/
-        ListOpenFiles(-1);   //Supongo qeu es una definicón estática, adaptar a nuestr lista               /*o el descriptor es menor que 0*/
-        return;
+    if (argumentos[0]==NULL || (df=atoi(argumentos[0]))<0) { //no hay parametro
+        ListOpenFiles(-1);   //Supongo qeu es una definicón estática, adaptar a nuestr lista       //o el descriptor es menor que 0
+      /*  return;
     }
 
 
@@ -67,3 +92,4 @@ void Cmd_dup (char * argumentos[]){
     sprintf (aux,"dup %d (%s)",df, p);
     .......AnadirAFicherosAbiertos......duplicado......aux.....fcntl(duplicado,F_GETFL).....;
 }
+*/
