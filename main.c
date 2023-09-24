@@ -17,6 +17,5 @@ int main(){
         lerEntrada(entrada, &h);
         procesarEntrada(entrada, &h, &rematado);
     }
-
     return 0;
 }
