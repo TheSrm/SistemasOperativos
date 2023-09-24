@@ -6,5 +6,7 @@
 
 
 void pid(char* argumentos[MAXARGS]);
+void Cmd_open(char *argumentos[MAXARGS]);
+void Cmd_
 
 #endif
