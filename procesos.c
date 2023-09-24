@@ -5,9 +5,9 @@ void pid(char *argumentos[MAXARGS]) {
     pid_t p_process_id=getppid();
 
     if (argumentos[0]==NULL) {
-        printf("The process id: %lli\n", process_id);
+        printf("Process id: %lli\n", process_id);
     }
     else
-    printf("The process id of parent function: %lli\n",p_process_id);
+    printf("Parent's process id: %lli\n",p_process_id);
 
 }
