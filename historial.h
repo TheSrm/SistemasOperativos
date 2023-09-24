@@ -8,13 +8,15 @@
 
 typedef struct hNode{
     char comando[ENTRADA_MAX];
-    struct hNode* next;
-};
+    struct hNode* nextCmd;
+}histNode;
 
-typedef struct hNode* historial;
+typedef histNode* historial;
 
 historial crearHistBaleiro();
 void borrarHist(historial* h);
-void insertHist(char* entrada, historial* h);
+bool insertHist(char* entrada, historial* h);
+void imprimirHistorial(historial h);
+void imprimirNComandos(historial h, char* numCmds);
 
 #endif

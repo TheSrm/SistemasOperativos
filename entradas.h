@@ -6,7 +6,7 @@
 #include "procesos.h"
 #include "autores.h"
 
-void lerEntrada(char* entrada);
-void procesarEntrada(char* entrada, bool* rematado);
+void lerEntrada(char* entrada, historial* h);
+void procesarEntrada(char* entrada, historial* h, bool* rematado);
 
 #endif

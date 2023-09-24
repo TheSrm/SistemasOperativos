@@ -10,11 +10,12 @@ void imprPrompt(){
 int main(){
     bool rematado = false;
     char* entrada = malloc(100);
+    historial h = crearHistBaleiro();
 
     while (!rematado){
         imprPrompt();
-        lerEntrada(entrada);
-        procesarEntrada(entrada, &rematado);
+        lerEntrada(entrada, &h);
+        procesarEntrada(entrada, &h, &rematado);
     }
 
     return 0;
