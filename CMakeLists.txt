@@ -15,4 +15,6 @@ add_executable(SHELL main.c
         procesos.c
         procesos.h
         definicionsBase.h
+        ficheiros.c
+        ficheiros.h
 )

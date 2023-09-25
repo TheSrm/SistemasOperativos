@@ -36,7 +36,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado) {
             borrarHist(h);
         else
             imprimirNComandos(*h, argumentos[0]);
-    }
+    } else if(strcmp(argPpal,"infosys")==0)
+        infosys();
     else
         printf("Comando invalido\n"); // implementar erros?
 }

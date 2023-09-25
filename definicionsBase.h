@@ -6,8 +6,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define MAXARGS 3
-#define ARGSIZE 25
-
+#define MAXARGS 10
 
 #endif
