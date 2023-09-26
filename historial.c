@@ -6,7 +6,7 @@ historial crearHistBaleiro(){
 
 bool crearNodo(histNode **Pnodo){
     *Pnodo = malloc(sizeof(histNode));
-    return (*Pnodo!=HISTNULL);
+    return (*Pnodo!=NULL);
 }
 
 bool insertHist(char* entrada, historial* h){

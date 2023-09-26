@@ -1,5 +1,6 @@
 #include "ficheiros.h"
-
+/* Eu rompéndome a cabeza e ao final non serve
+ * Gardámola de todas formas porque é posible que teñamos que facer algo tipo ls
 void listarFicheiros(){
     struct dirent **ficheiros;
     int n, i;
@@ -9,63 +10,89 @@ void listarFicheiros(){
         printf("Erro na lectura do directorio actual\n");
         return;
     }
-    for(i=0; i<=n; i++){
+    for(i=0; i<n; ++i){
         printf("%s\n", ficheiros[i]->d_name);
         free(ficheiros[i]);
     }
     free(ficheiros);
 }
-/*
-void Cmd_open (char * argumentos[]) {
+ */
+
+// Crea unha táboa de ficheiros baleira, neste caso un punteiro a NULL
+void crearTaboaFich(taboaFicheiros *t) {
+    *t = NULLFICH;
+}
+
+// Inserta un ficheiro f na táboa de ficheiros t (ordeada polos descriptores?)
+void insertarEnTaboa(taboaFicheiros *t, ficheiro f) {
+    *t = malloc(sizeof(taboaFicheiros));
+}
+
+// Imprime por pantalla os ficherios que constan abertos na táboa t
+void listarAbertos(taboaFicheiros t) {
+    if(t==NULLFICH)
+        printf("Non hai ningún ficheiro aberto no momento\n");
+    else {
+        printf("Descriptor\t|\tModo\t|\tNome");
+        for (t; t->next != NULL; t = t->next)
+            printf("%d\t|\t%d\t|\t%s",t->descriptor,t->modo,t->nome); // o ideal sería pasar o modo coma string, xa se verá
+    }
+}
+
+void Cmd_open (char * tr[]) {
     int i, df, mode = 0;
 
-    if (argumentos[0] == NULL) { //no hay parametro
-        //ListarFicherosAbiertos
+    if (tr[0] == NULL) { /*no hay parametro*/
+        listarAbertos();
         return;
     }
-    for (i = 1; argumentos[i] != NULL; i++)
-        if (!strcmp(argumentos[i], "cr")) mode |= O_CREAT;
-        else if (!strcmp(argumentos[i], "ex")) mode |= O_EXCL;
-        else if (!strcmp(argumentos[i], "ro")) mode |= O_RDONLY;
-        else if (!strcmp(argumentos[i], "wo")) mode |= O_WRONLY;
-        else if (!strcmp(argumentos[i], "rw")) mode |= O_RDWR;
-        else if (!strcmp(argumentos[i], "ap")) mode |= O_APPEND;
-        else if (!strcmp(argumentos[i], "tr")) mode |= O_TRUNC;
+    for (i = 1; tr[i] != NULL; i++)
+        if (!strcmp(tr[i], "cr")) mode |= O_CREAT;
+        else if (!strcmp(tr[i], "ex")) mode |= O_EXCL;
+        else if (!strcmp(tr[i], "ro")) mode |= O_RDONLY;
+        else if (!strcmp(tr[i], "wo")) mode |= O_WRONLY;
+        else if (!strcmp(tr[i], "rw")) mode |= O_RDWR;
+        else if (!strcmp(tr[i], "ap")) mode |= O_APPEND;
+        else if (!strcmp(tr[i], "tr")) mode |= O_TRUNC;
         else break;
 
-    if ((df = open(argumentos[0], mode, 0777)) == -1)
-        perror("Imposible abrir fichero");
+    if ((df = open(tr[0], mode, 0777)) == -1)
+        perror("Imposible engadir ficheiro");
     else {
-        //AnadirAFicherosAbiertos(descriptor...modo...nombre....)
-        //printf("Anadida entrada a la tabla ficheros abiertos..................", ......);
+        ...........AnadirAFicherosAbiertos(descriptor...
+        modo...nombre....)....
+        printf("Engadida entrada a taboa ficheiros abertos %s", );
     }
 }
+void Cmd_close (char *tr[])
+    {
+        int df;
 
-void Cmd_close (char *argumentos[]){
-    int df;
+        if (tr[0]==NULL || (df=atoi(tr[0]))<0) { /*no hay parametro*/
+            ..............ListarFicherosAbiertos............... /*o el descriptor es menor que 0*/
+            return;
+        }
 
-    if (argumentos[0]==NULL || (df=atoi(argumentos[0]))<0) { //no hay parametro
-        // istarFicherosAbiertos............... //o el descriptor es menor que 0
-        return;
+
+        if (close(df)==-1)
+            perror("Inposible pechar descriptor");
+        else
+        ........EliminarDeFicherosAbiertos......
     }
-
-    if (close(df)==-1)
-        perror("Imposible cerrar descriptor");
-    else
-        //........EliminarDeFicherosAbiertos......
 }
+void Cmd_dup (char * tr[])
+    {
+        int df, duplicado;
+        char aux[MAXNAME],*p;
 
-void Cmd_dup (char * argumentos[]){
-    int df, duplicado;
-    char aux[],*p;
+        if (tr[0]==NULL || (df=atoi(tr[0]))<0) { /*no hay parametro. */
+            listarAbertos();
+            return;
+        }
 
-    if (argumentos[0]==NULL || (df=atoi(argumentos[0]))<0) { //no hay parametro
-        ListOpenFiles(-1);   //Supongo qeu es una definicón estática, adaptar a nuestr lista       //o el descriptor es menor que 0
-        return;
+
+        p=.....NombreFicheroDescriptor(df).......;
+        sprintf (aux,"dup %d (%s)",df, p);
+        .......AnadirAFicherosAbiertos......duplicado......aux.....fcntl(duplicado,F_GETFL).....;
     }
-
-
-    //p=.....NombreFicheroDescriptor(df).......;
-    sprintf (aux,"dup %d (%s)",df, p);
-    //.......AnadirAFicherosAbiertos......duplicado......aux.....fcntl(duplicado,F_GETFL).....;
-}*/
+}
