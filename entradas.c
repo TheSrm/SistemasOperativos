@@ -6,10 +6,11 @@ void shutDown (bool* rematado){
 
 void lerEntrada(char *entrada, historial* h) { // poñer hist despois, tamén no .h
     fgets(entrada, ENTRADA_MAX, stdin);
-    insertHist(entrada, h);
+    if(!insertHist(entrada, h))
+        perror("Erro ao insertar o comando no historial");
 }
 
-void procesarEntrada(char *entrada, historial* h, bool* rematado) {
+void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t) {
     int i;
     char* argPpal, *argumentos[MAXARGS];
 
@@ -38,6 +39,12 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado) {
             imprimirNComandos(*h, argumentos[0]);
     } else if(strcmp(argPpal,"infosys")==0)
         infosys();
+    else if(strcmp(argPpal,"listopen")==0)
+        listarAbertos(*t);
+    else if(strcmp(argPpal,"open")==0)
+        Cmd_open(argumentos,t);
+    else if(strcmp(argPpal,"close")==0)
+        Cmd_close(argumentos,t);
     else
-        printf("Comando invalido\n"); // implementar erros?
+        printf("Comando invalido\n");
 }

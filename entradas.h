@@ -8,6 +8,6 @@
 #include "ficheiros.h"
 
 void lerEntrada(char* entrada, historial* h);
-void procesarEntrada(char* entrada, historial* h, bool* rematado);
+void procesarEntrada(char* entrada, historial* h, bool* rematado, taboaFicheiros *t);
 
 #endif

@@ -18,7 +18,7 @@ bool insertHist(char* entrada, historial* h){
     if(*h==HISTNULL)
         *h = hAux;
     else{
-        for (hCnt = *h; hCnt->nextCmd!=HISTNULL ; hCnt=hCnt->nextCmd);
+        for (hCnt = *h; hCnt->nextCmd!=HISTNULL; hCnt=hCnt->nextCmd);
         hCnt->nextCmd=hAux;
     }
     return true;

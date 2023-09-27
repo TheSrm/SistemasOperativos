@@ -23,9 +23,49 @@ void crearTaboaFich(taboaFicheiros *t) {
     *t = NULLFICH;
 }
 
+char* nomeFichSegundoDescriptor(int descr, taboaFicheiros t){
+    for(t; t!=NULLFICH && t->descriptor!=descr;t=t->next);
+    if(t==NULLFICH)
+        perror("Non se atopa ficheiro co descriptor dado");
+    return t->nome;
+}
+
 // Inserta un ficheiro f na táboa de ficheiros t (ordeada polos descriptores?)
-void insertarEnTaboa(taboaFicheiros *t, ficheiro f) {
-    *t = malloc(sizeof(taboaFicheiros));
+void insertarFicheiroEnTaboa(int modo, char* nomefich, unsigned int desc, taboaFicheiros *t) {
+    taboaFicheiros tAux, tCnt;
+    tAux = malloc(sizeof(taboaFicheiros));
+    if(*t == NULL) {
+        perror("Erro ao insertar o ficheiro na taboa de ficheiros abertos");
+        return;
+    }
+
+    strcpy(tAux->nome,nomefich);
+    tAux->modo=modo;
+    tAux->descriptor=desc;
+    if(*t==NULLFICH){
+        tAux->next=NULLFICH;
+        *t = tAux;
+    } else
+        for(tCnt = *t; tCnt->next!=NULLFICH; tCnt=tCnt->next)
+            tCnt->next=tAux;
+}
+
+void eliminarFicheiroDeTaboa(int descr, taboaFicheiros *t) {
+    taboaFicheiros tElim, tAux;
+
+    if(*t==NULLFICH)
+        perror("Non hai ficheiros que eliminar, a taboa esta baleira");
+    else {
+        for(tElim = *t; tElim->next!=NULLFICH && tElim->descriptor!=descr; tAux=tElim, tElim=tElim->next);
+        if(tElim->next==NULLFICH)
+            if(tElim->descriptor==descr)
+                tAux->next=NULLFICH;
+            else
+                perror("Arquivo co descriptor dado non atopado");
+        else
+            tAux->next = tElim->next;
+        free(tElim);
+    }
 }
 
 // Imprime por pantalla os ficherios que constan abertos na táboa t
@@ -39,11 +79,10 @@ void listarAbertos(taboaFicheiros t) {
     }
 }
 
-void Cmd_open (char * tr[]) {
+void Cmd_open (char * tr[], taboaFicheiros *t) {
     int i, df, mode = 0;
 
-    if (tr[0] == NULL) { /*no hay parametro*/
-        listarAbertos();
+    if (tr[0] == NULL) { // non hai parámetro
         return;
     }
     for (i = 1; tr[i] != NULL; i++)
@@ -59,40 +98,35 @@ void Cmd_open (char * tr[]) {
     if ((df = open(tr[0], mode, 0777)) == -1)
         perror("Imposible engadir ficheiro");
     else {
-        ...........AnadirAFicherosAbiertos(descriptor...
-        modo...nombre....)....
-        printf("Engadida entrada a taboa ficheiros abertos %s", );
+        insertarFicheiroEnTaboa(mode, tr[0],df, t);
+        printf("Engadida entrada a taboa ficheiros abertos %s\n", tr[0]);
     }
 }
-void Cmd_close (char *tr[])
-    {
-        int df;
+void Cmd_close (char *tr[], taboaFicheiros *t){
+    int df;
 
-        if (tr[0]==NULL || (df=atoi(tr[0]))<0) { /*no hay parametro*/
-            ..............ListarFicherosAbiertos............... /*o el descriptor es menor que 0*/
-            return;
-        }
-
-
-        if (close(df)==-1)
-            perror("Inposible pechar descriptor");
-        else
-        ........EliminarDeFicherosAbiertos......
+    if (tr[0]==NULL || (df=atoi(tr[0]))<0) { // sen parámetro ou é negativo
+        listarAbertos(*t);
+        return;
     }
+    if (close(df)==-1)
+        perror("Imposible pechar descriptor");
+    else
+        eliminarFicheiroDeTaboa(df,t);
 }
-void Cmd_dup (char * tr[])
-    {
-        int df, duplicado;
-        char aux[MAXNAME],*p;
 
-        if (tr[0]==NULL || (df=atoi(tr[0]))<0) { /*no hay parametro. */
-            listarAbertos();
-            return;
-        }
+// función incompleta
+void Cmd_dup (char * tr[], taboaFicheiros *t){
+    int df, duplicado;
+    char aux[MAXNAME],*p;
 
-
-        p=.....NombreFicheroDescriptor(df).......;
-        sprintf (aux,"dup %d (%s)",df, p);
-        .......AnadirAFicherosAbiertos......duplicado......aux.....fcntl(duplicado,F_GETFL).....;
+    if (tr[0]==NULL || (df=atoi(tr[0]))<0) { // sen parámetro ou é 0
+        listarAbertos(*t);
+        return;
     }
+    p=nomeFichSegundoDescriptor(df, *t);
+    sprintf (aux,"dup %d (%s)",df, p);
+
+    //.......AnadirAFicherosAbiertos......duplicado......aux.....fcntl(duplicado,F_GETFL).....;
+    insertarFicheiroEnTaboa(fcntl(df,F_GETFL),aux,df,t);
 }
