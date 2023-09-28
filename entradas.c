@@ -39,12 +39,16 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             imprimirNComandos(*h, argumentos[0]);
     } else if(strcmp(argPpal,"infosys")==0)
         infosys();
+    else if(strcmp(argPpal,"chdir")==0)
+        cambiarDirectorio(argumentos);
     else if(strcmp(argPpal,"listopen")==0)
         listarAbertos(*t);
     else if(strcmp(argPpal,"open")==0)
         Cmd_open(argumentos,t);
     else if(strcmp(argPpal,"close")==0)
         Cmd_close(argumentos,t);
+    else if(strcmp(argPpal,"dup")==0)
+        Cmd_dup(argumentos,t);
     else
         printf("Comando invalido\n");
 }

@@ -23,5 +23,6 @@ void Cmd_open (char * argumentos[], taboaFicheiros *t);
 void Cmd_close (char *argumentos[], taboaFicheiros *t);
 void Cmd_dup (char * argumentos[], taboaFicheiros *t);
 void listarAbertos(taboaFicheiros t);
+int cambiarDirectorio(char *argumentos[]);
 
 #endif

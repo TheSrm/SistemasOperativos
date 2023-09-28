@@ -17,6 +17,17 @@ void listarFicheiros(){
     free(ficheiros);
 }
  */
+int cambiarDirectorio(char *argumentos[]) {
+    char s[100];
+
+    if (argumentos[0]!=NULL){
+        if(chdir(argumentos[0])==-1)
+            printf("O directorio introducido non existe. O directorio non foi cambiado\n");
+    }
+    else
+        printf("%s\n", getcwd(s, 100));
+    return 0;
+}
 
 // Crea unha táboa de ficheiros baleira, neste caso un punteiro a NULL
 void crearTaboaFich(taboaFicheiros *t) {
@@ -30,14 +41,11 @@ char* nomeFichSegundoDescriptor(int descr, taboaFicheiros t){
     return t->nome;
 }
 
-// Inserta un ficheiro f na táboa de ficheiros t (ordeada polos descriptores?)
+// Inserta un ficheiro f na táboa de ficheiros t
 void insertarFicheiroEnTaboa(int modo, char* nomefich, unsigned int desc, taboaFicheiros *t) {
     taboaFicheiros tAux, tCnt;
     tAux = malloc(sizeof(taboaFicheiros));
-    if(*t == NULL) {
-        perror("Erro ao insertar o ficheiro na taboa de ficheiros abertos");
-        return;
-    }
+    tAux->nome = malloc(sizeof(char)*50);
 
     strcpy(tAux->nome,nomefich);
     tAux->modo=modo;
@@ -64,6 +72,7 @@ void eliminarFicheiroDeTaboa(int descr, taboaFicheiros *t) {
                 perror("Arquivo co descriptor dado non atopado");
         else
             tAux->next = tElim->next;
+        free(tElim->nome);
         free(tElim);
     }
 }
@@ -73,9 +82,9 @@ void listarAbertos(taboaFicheiros t) {
     if(t==NULLFICH)
         printf("Non hai ningún ficheiro aberto no momento\n");
     else {
-        printf("Descriptor\t|\tModo\t|\tNome");
-        for (t; t->next != NULL; t = t->next)
-            printf("%d\t|\t%d\t|\t%s",t->descriptor,t->modo,t->nome); // o ideal sería pasar o modo coma string, xa se verá
+        printf("Descriptor\t|\tModo\t|\tNome\n");
+        for (t; t != NULL; t = t->next)
+            printf("%d\t\t\t|\t\t%d\t|\t%s\n",t->descriptor,t->modo,t->nome); // o ideal sería pasar o modo coma string, xa se verá
     }
 }
 
@@ -115,7 +124,7 @@ void Cmd_close (char *tr[], taboaFicheiros *t){
         eliminarFicheiroDeTaboa(df,t);
 }
 
-// función incompleta
+    // función incompleta
 void Cmd_dup (char * tr[], taboaFicheiros *t){
     int df, duplicado;
     char aux[MAXNAME],*p;
@@ -126,7 +135,8 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
     }
     p=nomeFichSegundoDescriptor(df, *t);
     sprintf (aux,"dup %d (%s)",df, p);
+    duplicado = dup(df);
 
-    //.......AnadirAFicherosAbiertos......duplicado......aux.....fcntl(duplicado,F_GETFL).....;
-    insertarFicheiroEnTaboa(fcntl(df,F_GETFL),aux,df,t);
+    insertarFicheiroEnTaboa(fcntl(df,F_GETFL),aux,duplicado,t);
 }
+

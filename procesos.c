@@ -16,21 +16,21 @@ void infosys(){
         struct utsname Datos_del_ordenador;
 
         if (uname(&Datos_del_ordenador) != 0) {
-            perror("Error retrieving system information");
+            perror("Erro ao aobter información do sistema");
             return;
         }
 
-        printf("System Information:\n");
-        printf("  - Operating System: %s\n", Datos_del_ordenador.sysname);
-        printf("  - Node Name: %s\n", Datos_del_ordenador.nodename);
+        printf("Informacion do sistema:\n");
+        printf("  - Sistema operativo: %s\n", Datos_del_ordenador.sysname);
+        printf("  - Nome do nodo: %s\n", Datos_del_ordenador.nodename);
         printf("  - Release: %s\n", Datos_del_ordenador.release);
         printf("  - Version: %s\n", Datos_del_ordenador.version);
-        printf("  - Machine: %s\n", Datos_del_ordenador.machine);
+        printf("  - Maquina: %s\n", Datos_del_ordenador.machine);
 
         long procesadores = sysconf(_SC_NPROCESSORS_ONLN);
         if (procesadores <0) {
-            printf("Number of Processors: %ld\n", procesadores);
+            printf("Numero de procesadores: %ld\n", procesadores);
         } else {
-            perror("Error retrieving number of processors");
+            perror("Erro ao obter o numero de procesadores");
         }
 }
