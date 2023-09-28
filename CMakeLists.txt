@@ -17,4 +17,6 @@ add_executable(SHELL main.c
         definicionsBase.h
         ficheiros.c
         ficheiros.h
+        help.c
+        help.h
 )

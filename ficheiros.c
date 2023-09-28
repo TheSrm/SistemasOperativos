@@ -37,7 +37,7 @@ void crearTaboaFich(taboaFicheiros *t) {
 char* nomeFichSegundoDescriptor(int descr, taboaFicheiros t){
     for(t; t!=NULLFICH && t->descriptor!=descr;t=t->next);
     if(t==NULLFICH)
-        perror("Non se atopa ficheiro co descriptor dado");
+        return NULL;
     return t->nome;
 }
 
@@ -53,9 +53,10 @@ void insertarFicheiroEnTaboa(int modo, char* nomefich, unsigned int desc, taboaF
     if(*t==NULLFICH){
         tAux->next=NULLFICH;
         *t = tAux;
-    } else
-        for(tCnt = *t; tCnt->next!=NULLFICH; tCnt=tCnt->next)
-            tCnt->next=tAux;
+    } else {
+        for (tCnt = *t; tCnt->next != NULLFICH; tCnt = tCnt->next);
+        tCnt->next = tAux;
+    }
 }
 
 void eliminarFicheiroDeTaboa(int descr, taboaFicheiros *t) {
@@ -82,9 +83,9 @@ void listarAbertos(taboaFicheiros t) {
     if(t==NULLFICH)
         printf("Non hai ningún ficheiro aberto no momento\n");
     else {
-        printf("Descriptor\t|\tModo\t|\tNome\n");
+        printf("Descriptor\t|\tModo\t\t|\tNome\n");
         for (t; t != NULL; t = t->next)
-            printf("%d\t\t\t|\t\t%d\t|\t%s\n",t->descriptor,t->modo,t->nome); // o ideal sería pasar o modo coma string, xa se verá
+            printf("%d\t\t\t|\t\t%d\t\t|\t%s\n",t->descriptor,t->modo,t->nome); // o ideal sería pasar o modo coma string, xa se verá
     }
 }
 
@@ -119,7 +120,7 @@ void Cmd_close (char *tr[], taboaFicheiros *t){
         return;
     }
     if (close(df)==-1)
-        perror("Imposible pechar descriptor");
+        printf("Imposible pechar descriptor\n");
     else
         eliminarFicheiroDeTaboa(df,t);
 }
@@ -134,9 +135,14 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
         return;
     }
     p=nomeFichSegundoDescriptor(df, *t);
+    if(p==NULL){
+        printf("Non existe ficheiro con tal descriptor\n");
+        return;
+    }
     sprintf (aux,"dup %d (%s)",df, p);
     duplicado = dup(df);
 
-    insertarFicheiroEnTaboa(fcntl(df,F_GETFL),aux,duplicado,t);
+    insertarFicheiroEnTaboa(fcntl(df,F_GETFD),aux,duplicado,t);
+    printf("Ficheiro duplicado correctamente\n");
 }
 
