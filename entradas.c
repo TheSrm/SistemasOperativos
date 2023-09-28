@@ -49,6 +49,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             Cmd_close(argumentos, t);
         else if (strcmp(argPpal, "dup") == 0)
             Cmd_dup(argumentos, t);
+        else if (strcmp(argPpal,"help") == 0)
+            axudaComando(argumentos[0]);
         else
             printf("Comando invalido\n");
     }
