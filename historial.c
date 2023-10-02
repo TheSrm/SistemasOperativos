@@ -35,7 +35,7 @@ void borrarHist(historial* h){
 
 void imprimirHistorial(historial h){
     int cmdCnt=0;
-    for(h; h != HISTNULL; h=h->nextCmd, cmdCnt++)
+    for(; h != HISTNULL; h=h->nextCmd, cmdCnt++)
         printf("Comando %d: %s\n",cmdCnt,h->comando);
 }
 
@@ -55,7 +55,7 @@ int enteiroDeComando(char* s){
     for(i = 0; sAux[i]!='\0'; i++);
     --i;
     nInts=i;
-    for(i; i>=0; i--){
+    for(; i>=0; i--){
         if(sAux[i]<48 || sAux[i]>57)
             return -1;
         else
@@ -69,7 +69,7 @@ void imprimirNComandos(historial h, char* numCmds){
     if(N<=-1)
         printf("Argumento inválido\n");
     else {
-        for (h; h != HISTNULL && cmdCnt <= N; h = h->nextCmd, cmdCnt++)
+        for (; h != HISTNULL && cmdCnt <= N; h = h->nextCmd, cmdCnt++)
             printf("Comando %d: %s\n", cmdCnt, h->comando);
         if (cmdCnt < N)
             printf("O historial non ten tantos comandos coma os indicados\n");

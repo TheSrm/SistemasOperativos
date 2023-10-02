@@ -1,7 +1,7 @@
 #include "entradas.h"
 
-// Ao printf non lle gusta este símbolo
-// #define PROMPT_SYMBOL ♦
+// Autor1: Sergio Regueiro Martínez
+// Autor2: Daniel Ruibal Balboa
 
 void imprPrompt(){
     printf("$\t");

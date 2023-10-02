@@ -35,8 +35,8 @@ void crearTaboaFich(taboaFicheiros *t) {
 }
 
 char* nomeFichSegundoDescriptor(int descr, taboaFicheiros t){
-    for(t; t!=NULLFICH && t->descriptor!=descr;t=t->next);
-    if(t==NULLFICH)
+    for(; t!=NULLFICH && t->descriptor!=descr;t=t->next);//Crea un bucle que non para ata chegar ao final ou ata que os nomes coincidan
+    if(t==NULLFICH)//Se chegou ao final, non hai ficheiro con ese descriptor, polo que non se pode devolver nome ningún, polo que devolvemos nulo
         return NULL;
     return t->nome;
 }
@@ -60,7 +60,7 @@ void insertarFicheiroEnTaboa(int modo, char* nomefich, unsigned int desc, taboaF
 }
 
 void eliminarFicheiroDeTaboa(int descr, taboaFicheiros *t) {
-    taboaFicheiros tElim, tAux;
+    taboaFicheiros tElim=*t, tAux; //tElim indica o ficheiro a eliminar e tAux o anteior para enlazar se é necesario
 
     if(*t==NULLFICH)
         perror("Non hai ficheiros que eliminar, a taboa esta baleira");
@@ -78,14 +78,22 @@ void eliminarFicheiroDeTaboa(int descr, taboaFicheiros *t) {
     }
 }
 
+void pecharTodoFicheiro(taboaFicheiros *t){
+    taboaFicheiros tAux = *t;
+    for (; tAux != NULL; tAux = tAux->next) {
+        close(tAux->descriptor);
+        eliminarFicheiroDeTaboa(tAux->descriptor, t);
+    }
+}
+
 // Imprime por pantalla os ficherios que constan abertos na táboa t
 void listarAbertos(taboaFicheiros t) {
     if(t==NULLFICH)
         printf("Non hai ningún ficheiro aberto no momento\n");
     else {
-        printf("Descriptor\t|\tModo\t\t|\tNome\n");
-        for (t; t != NULL; t = t->next)
-            printf("%d\t\t\t|\t\t%d\t\t|\t%s\n",t->descriptor,t->modo,t->nome); // o ideal sería pasar o modo coma string, xa se verá
+        printf("Descriptor\t|\tModo\t\t|\tNome\n");//Se hai lista
+        for (; t != NULL; t = t->next)//Percorremola
+            printf("%d\t\t\t|\t\t%d\t\t|\t%s\n",t->descriptor,t->modo,t->nome);//Imprimindo cada un dos ficheiros actualemte abertos
     }
 }
 

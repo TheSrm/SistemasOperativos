@@ -2,21 +2,20 @@
 
 void pid(char *argumentos[MAXARGS]) {
     pid_t process_id=getpid();
-    //pid_t p_process_id=getppid();
+    pid_t p_process_id=getppid();
 
     if (argumentos[0]==NULL) {
         printf("Process id: %lli\n", process_id);
     }
-    //else
-   // printf("Parent's process id: %lli\n",p_process_id);
-
+    else if(strcmp(argumentos[0],"-p")==0)
+        printf("Parent's process id: %i\n",p_process_id);
 }
-
+//
 void infosys(){
         struct utsname Datos_del_ordenador;
 
         if (uname(&Datos_del_ordenador) != 0) {
-            perror("Erro ao aobter información do sistema");
+            printf("Erro ao obter información do sistema\n");
             return;
         }
 
@@ -31,6 +30,6 @@ void infosys(){
         if (procesadores <0) {
             printf("Numero de procesadores: %ld\n", procesadores);
         } else {
-            perror("Erro ao obter o numero de procesadores");
+            printf("Erro ao obter o numero de procesadores\n");
         }
 }
