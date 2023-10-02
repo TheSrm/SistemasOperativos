@@ -1,13 +1,15 @@
 #include "entradas.h"
 
+//Función encargada de cerrar a shell, cando o usuario o indique, cambiando o valor de rematado
 void shutDown (bool* rematado){
     *rematado = true;
 }
 
-void lerEntrada(char *entrada, historial* h) { // poñer hist despois, tamén no .h
-    fgets(entrada, ENTRADA_MAX, stdin);
-    if(!insertHist(entrada, h))
-        perror("Erro ao insertar o comando no historial");
+//Función encargada de ler a entrada do usuario
+void lerEntrada(char *entrada, historial* h) {
+    fgets(entrada, ENTRADA_MAX, stdin);//Conseguimos a entrada
+    if(!insertHist(entrada, h))//Se non a podemos insertar no historial por erro na función createnode
+        printf("Erro ao insertar o comando no historial");//Indicamos o erro e seguimos
 }
 //Repetimos un comando cuxa posición na lista sexa a indicada
 void repetirComando(char **argumentos, historial *h, taboaFicheiros *t){
@@ -32,13 +34,15 @@ void repetirComando(char **argumentos, historial *h, taboaFicheiros *t){
 
 //Troceamos o comando en argPpal, donde se garda o comando e argumentos[], donde gardaremos os argumentos de cada comando
 void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t) {
-    int i;
+    int i;//Creamos as variables necesarias para o correcto funcionamento da función
     char *argPpal, *argumentos[MAXARGS];
 
-    argPpal = strtok(entrada, " \n\t");
-    for (i = 0; i < MAXARGS; ++i) {
+    argPpal = strtok(entrada, " \n\t");//Dividimos o comando dos argumentos no primeiro espazo, ou senon hai argumentos, no \n ou \t final
+    for (i = 0; i < MAXARGS; ++i) {//Dividimos cada un dos argumentos do seguinte no primeiro espazo,  ou senon hai mais argumentos, no \n ou \t final
         argumentos[i] = strtok(NULL, " \n\t");
     }
+    //Sempre que exista un argumento principal, pasamolo por este conxunto de ifs, que comparará con cada un dos comandos existentes
+    // e executará o correcto, nalguns casos, diferentes argumentos teñen diferentes funcións, polo que tamen compararemos con argumentos
     if (argPpal != NULL) {
         if (strcmp(argPpal, "time") == 0)
             imprHora();
@@ -78,6 +82,7 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
         else if(strcmp(argPpal,"comand")== 0)
             repetirComando(argumentos, h, t);
         else
-            printf("Comando invalido\n");
+            printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
     }
+
 }

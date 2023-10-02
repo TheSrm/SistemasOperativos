@@ -1,5 +1,6 @@
 #include "funcionsTemporais.h"
 
+//Mostra por pantalla a data actual
 void imprData(void){
     time_t tempo;
     struct tm *tempoStruct;
@@ -8,6 +9,7 @@ void imprData(void){
     printf("%d/%d/%d\n",tempoStruct->tm_mday,tempoStruct->tm_mon,tempoStruct->tm_year+1900); // imprime a data collendo os parámetros necesarios da struct
 }
 
+//Mostra por pantalla a hora actual do sistema
 void imprHora(){
     time_t now;
 
