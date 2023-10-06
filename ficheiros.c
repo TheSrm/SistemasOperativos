@@ -1,7 +1,6 @@
 #include "ficheiros.h"
-//Función para listar ficheiros nun directorio, polo momento non sirve para nada, esperamos que no futuro si o faga
-/*
- * Gardámola de todas formas porque é posible que teñamos que facer algo tipo ls
+
+//Función para listar ficheiros nun directorio
 void listarFicheiros(){
     struct dirent **ficheiros;
     int n, i;
@@ -17,7 +16,20 @@ void listarFicheiros(){
     }
     free(ficheiros);
 }
- */
+
+// borra o fichiiro ou ficheiros pasador polo array de strings "argumentos"
+void borrarFicheiros(char *argumentos[]){
+    int i;
+    if(argumentos==NULL){
+        strerror(EINVAL);
+        perror("Non se introduciu ningun ficheiro a borrar");
+    }
+    for(i=0;argumentos[i]!=NULL;i++){
+        if(remove(argumentos[i])==-1)
+            perror("Imposible borrar o ficheiro");
+    }
+}
+
 //Función encargada de cambiar de directorio de traballo
 int cambiarDirectorio(char *argumentos[]) {
     char s[100];//Inicializamos as variables necesarias

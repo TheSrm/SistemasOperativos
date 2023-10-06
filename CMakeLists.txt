@@ -3,7 +3,7 @@ project(SHELL C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(SHELL main.c
+add_executable(SHELL p0.c
         funcionsTemporais.c
         funcionsTemporais.h
         entradas.c

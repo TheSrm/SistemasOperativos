@@ -2,7 +2,7 @@
 #define FICHEIROS_H
 
 #include "definicionsBase.h"
-//#include <dirent.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -23,6 +23,10 @@ void Cmd_open (char * argumentos[], taboaFicheiros *t);
 void Cmd_close (char *argumentos[], taboaFicheiros *t);
 void Cmd_dup (char * argumentos[], taboaFicheiros *t);
 void listarAbertos(taboaFicheiros t);
+
+void listarFicheiros();
+void borrarFicheiros(char *argumentos[]);
+
 int cambiarDirectorio(char *argumentos[]);
 void pecharTodoFicheiro(taboaFicheiros *t);
 
