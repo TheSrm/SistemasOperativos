@@ -4,26 +4,44 @@
 void listarFicheiros(char *argumentos[]){
     struct dirent **ficheiros;
     struct stat st;
+    struct passwd *psw;
     char s[100];
     int n, i;
+    short int recursivo=0; // 0 = nada, 1 = reca, 2 = recb
+    bool fichOcultos=false, soNomes=false, listarLongo=false, darLinks=false, datasAcceso=false;
 
-    if(argumentos==NULL) {
+    if(argumentos == NULL || *argumentos==NULL) {
         printf("%s\n", getcwd(s, 100)); return;
     }
-    /* for (i=0; argumentos[i]!=NULL; ++i) {
-         if(strcmp)
-     }*/
-    n = scandir(".", &ficheiros,NULL,alphasort);
-    stat(".",&st);
-    if(n==-1){
-        printf("Erro na lectura do directorio actual\n");
-        return;
+    for(i=0; argumentos[i]!=NULL; i++){
+        if(argumentos[i][0]=='-' && !soNomes) {
+            if (strcmp(argumentos[i], "-reca") == 0) recursivo = 1;
+            else if (strcmp(argumentos[i], "-recb") == 0) recursivo = 2;
+            else if(strcmp(argumentos[i], "-hid") == 0) fichOcultos = true;
+            else if(strcmp(argumentos[i], "-long") == 0) listarLongo = true;
+            else if(strcmp(argumentos[i], "-link")==0) darLinks = true;
+            else if(strcmp(argumentos[i], "-acc")==0) datasAcceso = true;
+        } else{
+            soNomes=true;
+            n = scandir(argumentos[i], &ficheiros,NULL,alphasort);
+            if(n==-1){
+                perror("Erro na lectura do directorio actual\n"); return;
+            }
+            printf("Bytes  Nome\n");
+            for(i=0; i<n; ++i){
+                stat(ficheiros[i]->d_name,&st); // hai que pasarlle o path ou cambiar o directorio (mellor o primeiro; recursividade)
+                if(fichOcultos || !fichOcultos && ficheiros[i]->d_name[0]!='.') {
+                    if(listarLongo) // data modificacion, numlinks?, inodo?, dono, grupo, permisos, tamaño, nome
+                        printf("%s %d (%ld) %s %s %s %ld %s",ctime(&st.st_mtim.tv_sec),st.st_nlink,
+                               ficheiros[i]->d_ino,st.st_uid);
+                    else // tamaño e nome
+                        printf("%ld %s\n", st.st_size, ficheiros[i]->d_name);
+                }
+                    free(ficheiros[i]);
+            }
+            free(ficheiros);
+        }
     }
-    for(i=0; i<n; ++i){ // sen argumentos lista, por defecto, tamaño e nome
-        printf("%ld\t%s\n", st.st_size, ficheiros[i]->d_name);
-        free(ficheiros[i]);
-    }
-    free(ficheiros);
 }
 
 // borra o ficheiro ou ficheiros pasador polo array de strings "argumentos"

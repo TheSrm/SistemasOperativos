@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <ftw.h>
 #include <sys/stat.h>
+#include <time.h>
+#include <pwd.h>
 
 #define NULLFICH NULL
 #define MAXNAME 30
