@@ -221,3 +221,38 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
     printf("Ficheiro duplicado correctamente\n");//Mostramos o mensaxe de proceso correcto.
 }
 
+
+
+
+void create (char *argumentos[], char * argPal){
+    if(strcmp(argumentos[0],"-f")==0)
+            open(argumentos[1],O_CREAT | 0777);
+    else
+        mkdir(argumentos[0],0777);
+}
+
+void stats (char *argumentos[], char *argPpal){
+    struct stat datosArchivo;
+    int i=1;
+    if (argumentos[1] == NULL)
+        printf("%l   %ld", datosArchivo.st_size, argumentos[0]);
+
+//Se pueden introducir millones de archivos en este comando, pero como sabemos
+    if (strcmp(argumentos[0],"-long")==0) {
+        if (strcmp(argumentos[1], "-acc") == 0) {
+            i++;
+        }
+    }
+
+    for (i;argumentos[i]!=NULL;i++){
+        if (strcmp(argumentos[0],"-long")==0 &&strcmp(argumentos[0],"-acc")==0&& strcmp(argumentos[0],"-link")==0 ) {
+            printf("%ld\t%s", datosArchivo.st_size, argumentos[0]);
+        }
+        if (strcmp(argumentos[0],"-long")==0) {
+            if (strcmp(argumentos[1], "-acc") == 0) {
+                printf("%ld\t%ld\t",datosArchivo.st_atime,datosArchivo.st_nlink);
+            }
+        }
+    }
+
+}

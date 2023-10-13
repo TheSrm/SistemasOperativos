@@ -32,4 +32,6 @@ void borrarFicheiros(char *argumentos[], bool recursivo);
 int cambiarDirectorio(char *argumentos[]);
 void pecharTodoFicheiro(taboaFicheiros *t);
 
+void create (char *argumentos[], char * argPal);
+
 #endif
