@@ -226,10 +226,12 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
 
 void create (char *argumentos[], char * argPal){
     if(strcmp(argumentos[0],"-f")==0)
-            open(argumentos[1],O_CREAT | 0777);
+        open(argumentos[1], O_CREAT,0777);
     else
         mkdir(argumentos[0],0777);
 }
+
+
 
 void stats (char *argumentos[], char *argPpal){
     struct stat datosArchivo;
