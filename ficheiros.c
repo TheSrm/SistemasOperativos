@@ -1,34 +1,68 @@
 #include "ficheiros.h"
 
 //Función para listar ficheiros nun directorio
-void listarFicheiros(){
+void listarFicheiros(char *argumentos[]){
     struct dirent **ficheiros;
+    struct stat st;
+    char s[100];
     int n, i;
 
+    if(argumentos==NULL) {
+        printf("%s\n", getcwd(s, 100)); return;
+    }
+    /* for (i=0; argumentos[i]!=NULL; ++i) {
+         if(strcmp)
+     }*/
     n = scandir(".", &ficheiros,NULL,alphasort);
+    stat(".",&st);
     if(n==-1){
         printf("Erro na lectura do directorio actual\n");
         return;
     }
-    for(i=0; i<n; ++i){
-        printf("%s\n", ficheiros[i]->d_name);
+    for(i=0; i<n; ++i){ // sen argumentos lista, por defecto, tamaño e nome
+        printf("%ld\t%s\n", st.st_size, ficheiros[i]->d_name);
         free(ficheiros[i]);
     }
     free(ficheiros);
 }
 
-// borra o fichiiro ou ficheiros pasador polo array de strings "argumentos"
-void borrarFicheiros(char *argumentos[]){
-    int i;
-    if(argumentos==NULL){
+// borra o ficheiro ou ficheiros pasador polo array de strings "argumentos"
+void borrarFicheiros(char *argumentos[], bool recursivo) {
+    int i, j, n;
+    struct stat st;
+    struct dirent **ficheiros;
+    char* s[1];
+
+    if (argumentos == NULL || *argumentos == NULL) {
         strerror(EINVAL);
         perror("Non se introduciu ningun ficheiro a borrar");
-    }
-    for(i=0;argumentos[i]!=NULL;i++){
-        if(remove(argumentos[i])==-1)
-            perror("Imposible borrar o ficheiro");
+    } else {
+        for (i = 0; argumentos[i] != NULL; i++) {
+            if (recursivo) {
+                n = scandir(argumentos[i], &ficheiros, NULL, alphasort);
+                stat(argumentos[i], &st);
+                if (n == -1) {
+                    perror("Erro na lectura do directorio actual");
+                    return;
+                } else {
+                    free(ficheiros[0]);
+                    free(ficheiros[1]);
+                    for (j = 2; j < n; j++) { //directorios: tipo 4
+                        s[0] = ficheiros[j]->d_name;
+                        borrarFicheiros(s, ficheiros[j]->d_type==4);
+                        free(ficheiros[j]);
+                    }
+                    if (remove(argumentos[i]) == -1)
+                        perror("Imposible borrar o ficheiro");
+                }
+            } else if (remove(argumentos[i]) == -1)
+
+                perror("Imposible borrar o ficheiro");
+        }
+        free(ficheiros);
     }
 }
+
 
 //Función encargada de cambiar de directorio de traballo
 int cambiarDirectorio(char *argumentos[]) {

@@ -5,6 +5,8 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <ftw.h>
+#include <sys/stat.h>
 
 #define NULLFICH NULL
 #define MAXNAME 30
@@ -24,8 +26,8 @@ void Cmd_close (char *argumentos[], taboaFicheiros *t);
 void Cmd_dup (char * argumentos[], taboaFicheiros *t);
 void listarAbertos(taboaFicheiros t);
 
-void listarFicheiros();
-void borrarFicheiros(char *argumentos[]);
+void listarFicheiros(char *argumentos[]);
+void borrarFicheiros(char *argumentos[], bool recursivo);
 
 int cambiarDirectorio(char *argumentos[]);
 void pecharTodoFicheiro(taboaFicheiros *t);
