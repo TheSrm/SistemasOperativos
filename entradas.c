@@ -81,15 +81,17 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             axudaComando(argumentos[0]);
         else if(strcmp(argPpal,"comand")== 0)
             repetirComando(argumentos, h, t);
-        else if(strcmp(argPpal,"list")==0)
-            listarFicheiros(argumentos);
         else if(strcmp(argPpal,"delete")==0)
             borrarFicheiros(argumentos,false);
         else if(strcmp(argPpal,"deltree")==0)
             borrarFicheiros(argumentos,true);
-        else if (strcmp(argPpal, "create") == 0) {
+        else if (strcmp(argPpal, "create") == 0)
             create(argumentos, argPpal);
-        } else
+        else if (strcmp(argPpal, "list") == 0)
+            listarFicheiros(argumentos, 0);
+        else if (strcmp(argPpal, "stat") == 0)
+            stats(argumentos, argPpal);
+        else
             printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
     }
 

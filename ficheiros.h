@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <pwd.h>
+#include <grp.h>
 
 #define NULLFICH NULL
 #define MAXNAME 30
@@ -28,7 +29,7 @@ void Cmd_close (char *argumentos[], taboaFicheiros *t);
 void Cmd_dup (char * argumentos[], taboaFicheiros *t);
 void listarAbertos(taboaFicheiros t);
 
-void listarFicheiros(char *argumentos[]);
+void listarFicheiros(char *argumentos[], short int modoRec);
 void borrarFicheiros(char *argumentos[], bool recursivo);
 
 int cambiarDirectorio(char *argumentos[]);
