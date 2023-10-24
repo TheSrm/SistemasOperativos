@@ -40,7 +40,7 @@ char * dataEnString(time_t *t){
     struct tm *structData;
     char *data = malloc(30);
     structData = localtime(t);
-    sprintf(data,"%d/%d/%2d-%2d:%2d", structData->tm_year+1900, structData->tm_mon, structData->tm_mday,
+    sprintf(data,"%d/%02d/%02d-%02d:%02d", structData->tm_year+1900, structData->tm_mon, structData->tm_mday,
             structData->tm_hour, structData->tm_min);
     return  data;
 }
@@ -51,11 +51,12 @@ void listarFicheiros(char *argumentos[], short int modoRec){
     struct stat st;
     struct passwd *psw;
     struct group *gr;
-    char s[100], *nomeFich, nomeAux[100], linkPath[100], path[100];
-    int n, i, j;
+    char s[MAX_PATHSTRING], *nomeFich, nomeAux[MAX_PATHSTRING], linkPath[MAX_PATHSTRING],
+    path[MAX_PATHSTRING], pathAux[MAX_PATHSTRING], nomeDirRec[MAX_PATHSTRING], *argsRec[MAXARGS];
+    int n, i, j, k, argRecAux = 0;
+    long charsLink;
     short int recursivo = modoRec; // 0 = nada, 1 = reca, 2 = recb
     bool fichOcultos=false, soNomes=false, listarLongo=false, darLinks=false, datasAcceso=false;
-    // FALTA POR IMPLEMENTAR RECURSIVIDADE!!
     if(argumentos == NULL || *argumentos==NULL) {
         printf("%s\n", getcwd(s, 100)); return;
     }
@@ -63,16 +64,32 @@ void listarFicheiros(char *argumentos[], short int modoRec){
         if(argumentos[i][0]=='-' && !soNomes) {
             if (strcmp(argumentos[i], "-reca") == 0 && recursivo == 0) recursivo = 1;
             else if (strcmp(argumentos[i], "-recb") == 0 && recursivo == 0) recursivo = 2;
-            else if(strcmp(argumentos[i], "-hid") == 0 && !fichOcultos) fichOcultos = true;
-            else if(strcmp(argumentos[i], "-long") == 0 && !listarLongo) listarLongo = true;
-            else if(strcmp(argumentos[i], "-link")==0 && listarLongo && !darLinks) darLinks = true;
-            else if(strcmp(argumentos[i], "-acc")==0 && listarLongo && !datasAcceso) datasAcceso = true;
+            else if(strcmp(argumentos[i], "-hid") == 0) fichOcultos = true;
+            else if(strcmp(argumentos[i], "-long") == 0) listarLongo = true;
+            else if(strcmp(argumentos[i], "-link")==0) darLinks = true;
+            else if(strcmp(argumentos[i], "-acc")==0) datasAcceso = true;
         } else{
             soNomes=true; // indica a partir de que argumento só se collen nomes de ficheiros
+            printf("Directorio: %s\n",argumentos[i]);
             n = scandir(argumentos[i], &ficheiros,NULL,alphasort);
             if(n==-1){
-                perror("Erro na lectura do directorio actual\n"); return;
-            }
+                perror("Erro na lectura do directorio actual"); return;
+            } else if (n <= 2)
+                printf("(Directorio baleiro)\n");
+            /*for(j=0; j<n; ++j) if(recursivo == 2 && ficheiros[j]->d_type==4) // recb
+                if(strcmp(ficheiros[j]->d_name,".")!=0 && strcmp(ficheiros[j]->d_name,"..")!=0){
+                    for(k = 0; k < 5; k++){
+                        if(fichOcultos && argRecAux < 1) { strcpy(argsRec[k],"-hid "); argRecAux = 1; }
+                        else if(listarLongo && argRecAux < 2) { strcpy(argsRec[k],"-long "); argRecAux = 2;}
+                        else if(darLinks && argRecAux < 3) { strcpy(argsRec[k],"-link "); argRecAux = 3;}
+                        else if(datasAcceso && argRecAux < 4) { strcpy(argsRec[k],"-hid "); argRecAux = 4;}
+                        else {
+                            strcpy(nomeDirRec,argumentos[i]);
+                            strcat(nomeDirRec,"/"); strcat(nomeDirRec,ficheiros[j]->d_name);
+                            argsRec[k] = nomeDirRec; break; }
+                    }
+                    listarFicheiros(argsRec,2);
+                }*/
             for(j=0; j<n; ++j) { // percorremos os ficheiros do directorio i
                 nomeFich = ficheiros[j]->d_name;
                 if(argumentos[i][0]=='/') { // distinguimos entre ruta relativa e absoluta
@@ -89,29 +106,51 @@ void listarFicheiros(char *argumentos[], short int modoRec){
                 gr = getgrgid(st.st_gid);
                 // decídese se se imprime en función de se empeza por punto (= fich oculto) ou non
                 if (fichOcultos || (!fichOcultos && ficheiros[j]->d_name[0] != '.')) {
-                    // (NON FUNCIONA) os softlinks aparecen co path ao que fan referencia
-                    if (ficheiros[i]->d_type == 10 && darLinks)
-                        { readlink(path,linkPath,100);
-                        sprintf(nomeFich,"%s -> %s",ficheiros[j]->d_name,linkPath); }
+                    // os softlinks aparecen co path ao que fan referencia
+                    if (ficheiros[j]->d_type == 10 && darLinks) {
+                        realpath(argumentos[i],pathAux);
+                        strcat(pathAux,"/"); strcat(pathAux,nomeFich);
+                        if((charsLink = readlink(pathAux,linkPath,MAX_PATHSTRING)) == -1)
+                        { perror("Erro na lectura do link simbolico"); continue;}
+                        else {
+                            linkPath[charsLink] = 0;
+                            sprintf(nomeFich, "%s -> %s", ficheiros[j]->d_name, linkPath);
+                        }
+                    }
                     if (listarLongo) { // data, numlinks, inodo, dono, grupo, permisos, tamaño, nome
                         if (datasAcceso)
-                            printf("%s %lu (%ld) %s %s %s %ld %s\n",
+                            printf("%s %lu (%ld) %s %s %s %9ld %s\n",
                                    dataEnString(&st.st_atim.tv_sec), st.st_nlink,
                                    ficheiros[j]->d_ino, psw->pw_name, gr->gr_name,
                                    ConvierteModo2(st.st_mode), st.st_size, nomeFich);
                         else
-                            printf("%s %lu (%ld) %s %s %s %ld %s\n",
+                            printf("%s %lu (%ld) %s %s %s %9ld %s\n",
                                    dataEnString(&st.st_mtim.tv_sec), st.st_nlink,
                                    ficheiros[j]->d_ino, psw->pw_name, gr->gr_name,
                                        ConvierteModo2(st.st_mode), st.st_size, nomeFich);
                         } else // tamaño e nome
-                            printf("%ld %s\n", st.st_size, nomeFich);
+                            printf("%9ld %s\n", st.st_size, nomeFich);
                     }
                     free(ficheiros[j]);
             }
+            /*for (j=0; j<n; j++) if(recursivo == 1 && ficheiros[j]->d_type==4) // reca
+            if(strcmp(ficheiros[j]->d_name,".")!=0 && strcmp(ficheiros[j]->d_name,"..")!=0){
+                for(k = 0; k < MAXARGS, ficheiros[j]->d_type==4; k++){
+                    if(fichOcultos && argRecAux < 1) { strcpy(argsRec[k],"-hid "); argRecAux = 1; }
+                    else if(listarLongo && argRecAux < 2) { strcpy(argsRec[k],"-long "); argRecAux = 2;}
+                    else if(darLinks && argRecAux < 3) { strcpy(argsRec[k],"-link "); argRecAux = 3;}
+                    else if(datasAcceso && argRecAux < 4) { strcpy(argsRec[k],"-hid "); argRecAux = 4;}
+                    else {
+                        argsRec[k] = malloc(256);
+                        strcpy(nomeDirRec,argumentos[i]);
+                        strcat(nomeDirRec,"/"); strcat(nomeDirRec,ficheiros[j]->d_name);
+                        strcpy(argsRec[k],nomeDirRec); j++;
+                    }
+                }
+                listarFicheiros(argsRec,1);
+            }*/
             free(ficheiros);
         }
-        printf("---\n"); // separa os ficheiros nunha mesma chamada ao comando
     }
 }
 
