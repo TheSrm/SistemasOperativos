@@ -159,13 +159,15 @@ void borrarFicheiros(char *argumentos[], bool recursivo) {
     int i, j, n;
     struct stat st;
     struct dirent **ficheiros;
-    char* s[1];
+    char *s[2], nomeAux[MAX_PATHSTRING], path[MAX_PATHSTRING],
+    nomeFich[MAX_PATHSTRING], pathAux[MAX_PATHSTRING];
 
     if (argumentos == NULL || *argumentos == NULL) {
         strerror(EINVAL);
         perror("Non se introduciu ningun ficheiro a borrar");
     } else {
         for (i = 0; argumentos[i] != NULL; i++) {
+            realpath(argumentos[i],path);
             if (recursivo) {
                 n = scandir(argumentos[i], &ficheiros, NULL, alphasort);
                 stat(argumentos[i], &st);
@@ -175,19 +177,26 @@ void borrarFicheiros(char *argumentos[], bool recursivo) {
                 } else {
                     free(ficheiros[0]);
                     free(ficheiros[1]);
-                    for (j = 2; j < n; j++) { //directorios: tipo 4
-                        s[0] = ficheiros[j]->d_name;
+                    for (j = n-1; j >= 2; j--) {
+                        strcpy(nomeFich, ficheiros[j]->d_name);
+                        if (lstat(path, &st) == -1) { // non existe o ficheiro ou os datos non son válidos
+                            perror("Erro na lectura dos datos do directorio");
+                            continue;
+                        }
+                        strcpy(pathAux,path);
+                        strcat(pathAux,"/"); strcat(pathAux,nomeFich);
+                        s[0] = pathAux;
+                        s[1] = NULL;
+                        // borra o ficheiro j, recursivamente se é directorio
                         borrarFicheiros(s, ficheiros[j]->d_type==4);
                         free(ficheiros[j]);
                     }
-                    if (remove(argumentos[i]) == -1)
+                    if (remove(path) == -1)
                         perror("Imposible borrar o ficheiro");
-                }
-            } else if (remove(argumentos[i]) == -1)
-
+                } free(ficheiros);
+            } else if (remove(path) == -1)
                 perror("Imposible borrar o ficheiro");
         }
-        free(ficheiros);
     }
 }
 
