@@ -94,7 +94,6 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
                     } else
                         printf("%9ld  %s\n", datosArchivo.st_size, argumentos[i]);
 
-                    free(datosArchivo);
                 }
             }
         }
@@ -371,11 +370,15 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
 
 
 void create (char *argumentos[]){
-    if(strcmp(argumentos[0],"-f")==0)
-        if(open(argumentos[1], O_CREAT,0777)<0)
+    if(strcmp(argumentos[0],"-f")==0) {
+        if (open(argumentos[1], O_CREAT, 0777) < 0)
             perror("Non puido crearse o ficheiro");
-    if( mkdir(argumentos[0],0777) < 0)
+    }else
+
+    if( mkdir(argumentos[1],0777) < 0){
         perror("Non puido crearse o directorio");
+    }
+
        
 }
 
@@ -415,4 +418,5 @@ void stats (char *argumentos[]){
 
     ImprimirDatos(argumentos,numDir,numComandos,HaiLong,HaiAcc,HaiLink);
 }
+
 
