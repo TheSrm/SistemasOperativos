@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 
 include_directories(.)
 
-add_executable(SistemasOperativos
+add_executable(P1
         autores.c
         autores.h
         definicionsBase.h
