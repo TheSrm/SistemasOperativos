@@ -93,6 +93,8 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
                         }
                     } else
                         printf("%9ld  %s\n", datosArchivo.st_size, argumentos[i]);
+
+                    free(datosArchivo);
                 }
             }
         }
