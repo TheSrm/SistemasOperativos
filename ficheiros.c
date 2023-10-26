@@ -363,35 +363,163 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
 
 void create (char *argumentos[], char * argPal){
     if(strcmp(argumentos[0],"-f")==0)
-        open(argumentos[1], O_CREAT,0777);
-    else
-        mkdir(argumentos[0],0777);
+        if(open(argumentos[1], O_CREAT,0777)<0)
+            perror("No se ha podido crear el fichero");
+            
+        
+    
+    if( mkdir(argumentos[0],0777);<0)
+        perror("No se ha podido crear el directorio");
+       
 }
 
 
 
-void stats (char *argumentos[], char *argPpal){
-    struct stat datosArchivo;
-    int i=1;
-    if (argumentos[1] == NULL)
-        printf("%l   %ld", datosArchivo.st_size, argumentos[0]);
-
-//Se pueden introducir millones de archivos en este comando, pero como sabemos
-    if (strcmp(argumentos[0],"-long")==0) {
-        if (strcmp(argumentos[1], "-acc") == 0) {
-            i++;
-        }
+char LetraTF (mode_t m){
+    switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
+        case S_IFSOCK: return 's'; /*socket */
+        case S_IFLNK: return 'l'; /*symbolic link*/
+        case S_IFREG: return '-'; /* fichero normal*/
+        case S_IFBLK: return 'b'; /*block device*/
+        case S_IFDIR: return 'd'; /*directorio */
+        case S_IFCHR: return 'c'; /*char device*/
+        case S_IFIFO: return 'p'; /*pipe*/
+        default: return '?'; /*desconocido, no deberia aparecer*/
     }
+}
 
-    for (i;argumentos[i]!=NULL;i++){
-        if (strcmp(argumentos[0],"-long")==0 &&strcmp(argumentos[0],"-acc")==0&& strcmp(argumentos[0],"-link")==0 ) {
-            printf("%ld\t%s", datosArchivo.st_size, argumentos[0]);
-        }
-        if (strcmp(argumentos[0],"-long")==0) {
-            if (strcmp(argumentos[1], "-acc") == 0) {
-                printf("%ld\t%ld\t",datosArchivo.st_atime,datosArchivo.st_nlink);
+char * ConvierteModo (mode_t m, char *permisos){
+    strcpy (permisos,"---------- ");
+
+    permisos[0]=LetraTF(m);
+    if (m&S_IRUSR) permisos[1]='r';
+    if (m&S_IWUSR) permisos[2]='w';
+    if (m&S_IXUSR) permisos[3]='x';
+    if (m&S_IRGRP) permisos[4]='r';
+    if (m&S_IWGRP) permisos[5]='w';
+    if (m&S_IXGRP) permisos[6]='x';
+    if (m&S_IROTH) permisos[7]='r';
+    if (m&S_IWOTH) permisos[8]='w';
+    if (m&S_IXOTH) permisos[9]='x';
+    if (m&S_ISUID) permisos[3]='s';
+    if (m&S_ISGID) permisos[6]='s';
+    if (m&S_ISVTX) permisos[9]='t';
+
+    return permisos;
+}
+
+void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong, bool HaiAcc, bool HaiLink) {
+    struct stat datosArchivo;
+    char permisos[10];
+
+    if (numDir == 0)  {
+        char s[MAXDIR];
+        getcwd(s, MAXDIR);
+        printf("%s\n", s);
+        return;
+    } else {
+
+
+        for (int i = numOpcions; i <= numDir + numOpcions - 1; ++i) {
+            if (stat(argumentos[i], &datosArchivo) < 0) {//Leo el archivo qeu me dan y si es un acceso directo, cojo los datos del acceso directo
+                perror("Error al obtener informacion del archivo");
+                return;
+            } else {
+                char L = LetraTF(datosArchivo.st_mode);
+                if (strcmp(&L, "l") != 0) {
+                    HaiLink=false;
+
+                    if (lstat(argumentos[i], &datosArchivo) < 0) {
+                        perror("Error al obtener informacion del archivo");
+                        return;
+                    }
+                }
+
+                    if (!HaiLong) {
+                        if (stat(argumentos[i], &datosArchivo) < 0) {
+                            perror("Error al obtener informacion del archivo");
+                            return;
+                        } else {
+                            printf("%ld  %s", datosArchivo.st_size, argumentos[i]);
+                        }
+
+                    } else {
+                        struct tm *timeinfo;
+                        if (HaiAcc) {
+                            timeinfo = localtime(&datosArchivo.st_atime);
+
+                        } else {
+                            timeinfo = localtime(&datosArchivo.st_mtime);
+                        }
+
+
+                        printf("%d-%d-%d %d:%d   %ld  ( %ld)    %s  %s  %s    ",
+                               timeinfo->tm_mday, timeinfo->tm_mon + 1,timeinfo->tm_year + 1900,timeinfo->tm_hour,
+                               timeinfo->tm_min, datosArchivo.st_nlink, datosArchivo.st_ino,getpwuid(datosArchivo.st_uid)->pw_name,
+                               getpwuid(datosArchivo.st_gid)->pw_name,ConvierteModo(datosArchivo.st_mode, permisos));
+
+                        if (HaiLink) {
+
+                            char  *path = argumentos[i]; // Ruta al enlace simbólico
+                            char Destino[100]; // Buffer para almacenar el destino del enlace
+
+                            // Leemos el enlace simbólico y almacenamos el destino en 'buf'
+                            ssize_t len = readlink(path, Destino, sizeof(Destino)-1);
+
+                            if (len != -1) {
+                                printf("%lu  %s  ->  %s", datosArchivo.st_size, argumentos[i], Destino);
+                            } else {
+                                perror("Error al leer el enlace simbólico");
+                                return;
+                            }
+                        } else
+                            printf("%ld  %s\n", datosArchivo.st_size, argumentos[i]);
+                    }
+                }
             }
         }
     }
 
+
+
+
+
+
+
+void stats (char *argumentos[]){
+    int numComandos=0, numDir=0;
+    bool HaiLong=false,HaiAcc=false,HaiLink=false;
+
+    if ((*argumentos)==NULL){
+        char s[MAXDIR];
+        getcwd(s, MAXDIR);
+        printf("%s\n", s);
+        return;
+    }
+
+    if (strcmp(argumentos[0],"")==0) {
+        printf("No ejecutado, no such file or directory");
+        return;
+    }
+
+    for (int j = 0; argumentos[j]!=NULL; ++j) {
+        if (strcmp(argumentos[j],"-long")==0){
+            numComandos++;
+            HaiLong=true;
+
+        }else if (strcmp(argumentos[j],"-acc")==0){
+            numComandos++;
+            HaiAcc=true;
+        }else if(strcmp(argumentos[j],"-link")==0){
+            numComandos++;
+            HaiLink=true;
+
+        }else {
+        numDir++;
+        }
+
+    }
+
+    ImprimirDatos(argumentos,numDir,numComandos,HaiLong,HaiAcc,HaiLink);
 }
+
