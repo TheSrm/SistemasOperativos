@@ -36,25 +36,75 @@ char * ConvierteModo2 (mode_t m)
     return permisos;
 }
 
-char * dataEnString(time_t *t){
-    struct tm *structData;
-    char *data = malloc(30);
-    structData = localtime(t);
-    sprintf(data,"%d/%02d/%02d-%02d:%02d", structData->tm_year+1900, structData->tm_mon, structData->tm_mday,
-            structData->tm_hour, structData->tm_min);
-    return  data;
+void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong, bool HaiAcc, bool HaiLink) {
+    struct stat datosArchivo;
+
+    if (numDir == 0)  {
+        char s[MAXDIR];
+        getcwd(s, MAXDIR);
+        printf("%s\n", s);
+        return;
+    } else {
+        for (int i = numOpcions; i <= numDir + numOpcions - 1; ++i){
+            if (stat(argumentos[i], &datosArchivo) < 0) {//Leo el archivo qeu me dan y si es un acceso directo, cojo los datos del acceso directo
+                perror("Erro ao obter informacion do ficheiro");
+                return;
+            } else {
+                char L = LetraTF(datosArchivo.st_mode);
+                if (strcmp(&L, "l") != 0) {
+                    HaiLink=false;
+
+                    if (lstat(argumentos[i], &datosArchivo) < 0) {
+                        perror("Erro ao obter informacion do ficheiro (link)");
+                        return;
+                    }
+                }
+
+                if (!HaiLong) {
+                    if (stat(argumentos[i], &datosArchivo) < 0) {
+                        perror("Erro ao obter informacion do ficheiro");
+                        return;
+                    } else
+                        printf("%9ld  %s\n", datosArchivo.st_size, argumentos[i]);
+                } else {
+                    struct tm *timeinfo;
+                    if (HaiAcc)
+                        timeinfo = localtime(&datosArchivo.st_atime);
+                    else
+                        timeinfo = localtime(&datosArchivo.st_mtime);
+
+                    printf("%02d-%02d-%d %02d:%02d   %lu (%ld) %s %s %s",
+                           timeinfo->tm_mday, timeinfo->tm_mon + 1,timeinfo->tm_year + 1900,timeinfo->tm_hour,
+                           timeinfo->tm_min, datosArchivo.st_nlink, datosArchivo.st_ino,getpwuid(datosArchivo.st_uid)->pw_name,
+                           getgrgid(datosArchivo.st_gid)->gr_name,ConvierteModo2(datosArchivo.st_mode));
+
+                    if (HaiLink) {
+                        char  *path = argumentos[i]; // Ruta al enlace simbólico
+                        char Destino[100]; // Buffer para almacenar el destino del enlace
+
+                        // Leemos el enlace simbólico y almacenamos el destino en 'buf'
+                        ssize_t len = readlink(path, Destino, sizeof(Destino)-1);
+
+                        if (len != -1)
+                            printf("%lu  %s  ->  %s", datosArchivo.st_size, argumentos[i], Destino);
+                        else {
+                            perror("Erro ao ler o enlace simbolico");
+                            return;
+                        }
+                    } else
+                        printf("%9ld  %s\n", datosArchivo.st_size, argumentos[i]);
+                }
+            }
+        }
+    }
 }
 
 //Función para listar ficheiros nun directorio
-void listarFicheiros(char *argumentos[], short int modoRec){
+void listarFicheiros(char *argumentos[], short int modoRec, int numrec){
     struct dirent **ficheiros;
-    struct stat st;
-    struct passwd *psw;
-    struct group *gr;
-    char s[MAX_PATHSTRING], *nomeFich, nomeAux[MAX_PATHSTRING], linkPath[MAX_PATHSTRING],
-    path[MAX_PATHSTRING], pathAux[MAX_PATHSTRING], nomeDirRec[MAX_PATHSTRING], *argsRec[MAXARGS];
-    int n, i, j, k, argRecAux = 0;
-    long charsLink;
+    char s[MAX_PATHSTRING], *nomeFich, nomeAux[MAX_PATHSTRING], separacionRec[64] = "",
+    path[MAX_PATHSTRING], *pathRec[2], **pathArr;
+    int n, i, j;
     short int recursivo = modoRec; // 0 = nada, 1 = reca, 2 = recb
     bool fichOcultos=false, soNomes=false, listarLongo=false, darLinks=false, datasAcceso=false;
     if(argumentos == NULL || *argumentos==NULL) {
@@ -68,7 +118,7 @@ void listarFicheiros(char *argumentos[], short int modoRec){
             else if(strcmp(argumentos[i], "-long") == 0) listarLongo = true;
             else if(strcmp(argumentos[i], "-link")==0) darLinks = true;
             else if(strcmp(argumentos[i], "-acc")==0) datasAcceso = true;
-        } else{
+        } else {
             soNomes=true; // indica a partir de que argumento só se collen nomes de ficheiros
             printf("Directorio: %s\n",argumentos[i]);
             n = scandir(argumentos[i], &ficheiros,NULL,alphasort);
@@ -76,79 +126,37 @@ void listarFicheiros(char *argumentos[], short int modoRec){
                 perror("Erro na lectura do directorio actual"); return;
             } else if (n <= 2)
                 printf("(Directorio baleiro)\n");
-            /*for(j=0; j<n; ++j) if(recursivo == 2 && ficheiros[j]->d_type==4) // recb
-                if(strcmp(ficheiros[j]->d_name,".")!=0 && strcmp(ficheiros[j]->d_name,"..")!=0){
-                    for(k = 0; k < 5; k++){
-                        if(fichOcultos && argRecAux < 1) { strcpy(argsRec[k],"-hid "); argRecAux = 1; }
-                        else if(listarLongo && argRecAux < 2) { strcpy(argsRec[k],"-long "); argRecAux = 2;}
-                        else if(darLinks && argRecAux < 3) { strcpy(argsRec[k],"-link "); argRecAux = 3;}
-                        else if(datasAcceso && argRecAux < 4) { strcpy(argsRec[k],"-hid "); argRecAux = 4;}
-                        else {
-                            strcpy(nomeDirRec,argumentos[i]);
-                            strcat(nomeDirRec,"/"); strcat(nomeDirRec,ficheiros[j]->d_name);
-                            argsRec[k] = nomeDirRec; break; }
+            else {
+                pathArr = malloc(sizeof(char*) * n-2);
+                free(ficheiros[0]); free(ficheiros[1]);
+                for(j=2; j<n; ++j) { // percorremos os ficheiros do directorio i
+                    nomeFich = ficheiros[j]->d_name;
+                    if(argumentos[i][0]=='/') { // distinguimos entre ruta relativa e absoluta
+                        strcpy(nomeAux, realpath(argumentos[i],path)); // aqui a asignacion a path é provisional
+                        strcat(nomeAux,"/"); strcat(nomeAux,nomeFich);
+                        realpath(nomeAux,path);
+                    } else realpath(nomeFich,path);
+                    pathArr[j-2] = path;
+                    pathRec[1] = NULL;
+                    pathRec[0] = path;
+                    if (recursivo == 2 && ficheiros[j]->d_type == 4) { // recb
+                        listarFicheiros(pathRec,2, numrec+1);
                     }
-                    listarFicheiros(argsRec,2);
-                }*/
-            for(j=0; j<n; ++j) { // percorremos os ficheiros do directorio i
-                nomeFich = ficheiros[j]->d_name;
-                if(argumentos[i][0]=='/') { // distinguimos entre ruta relativa e absoluta
-                    strcpy(nomeAux, realpath(argumentos[i],path)); // aqui a asignacion a path é provisional
-                    strcat(nomeAux,"/"); strcat(nomeAux,nomeFich);
-                    realpath(nomeAux,path);
-                } else realpath(nomeFich,path);
-                if (lstat(path, &st) == -1) { // non existe o ficheiro ou os datos non son válidos
-                    perror("Erro na lectura dos datos do directorio");
-                    continue;
-                }
-                // dúas variables para propietario e grupo
-                psw = getpwuid(st.st_uid);
-                gr = getgrgid(st.st_gid);
-                // decídese se se imprime en función de se empeza por punto (= fich oculto) ou non
-                if (fichOcultos || (!fichOcultos && ficheiros[j]->d_name[0] != '.')) {
-                    // os softlinks aparecen co path ao que fan referencia
-                    if (ficheiros[j]->d_type == 10 && darLinks) {
-                        realpath(argumentos[i],pathAux);
-                        strcat(pathAux,"/"); strcat(pathAux,nomeFich);
-                        if((charsLink = readlink(pathAux,linkPath,MAX_PATHSTRING)) == -1)
-                        { perror("Erro na lectura do link simbolico"); continue;}
-                        else {
-                            linkPath[charsLink] = 0;
-                            sprintf(nomeFich, "%s -> %s", ficheiros[j]->d_name, linkPath);
-                        }
+                    // decídese se imprime en función de se empeza por punto (= fich oculto) ou non
+                    if(fichOcultos || (!fichOcultos && nomeFich[0] != '.')) {
+                        ImprimirDatos(pathArr, 1, 0, listarLongo, datasAcceso, darLinks);
+                        if(j == n-1)
+                            for(int k = 0; k <= numrec; k++)
+                                strcat(separacionRec, "--");
+                        printf("%s\n",separacionRec);
                     }
-                    if (listarLongo) { // data, numlinks, inodo, dono, grupo, permisos, tamaño, nome
-                        if (datasAcceso)
-                            printf("%s %lu (%ld) %s %s %s %9ld %s\n",
-                                   dataEnString(&st.st_atim.tv_sec), st.st_nlink,
-                                   ficheiros[j]->d_ino, psw->pw_name, gr->gr_name,
-                                   ConvierteModo2(st.st_mode), st.st_size, nomeFich);
-                        else
-                            printf("%s %lu (%ld) %s %s %s %9ld %s\n",
-                                   dataEnString(&st.st_mtim.tv_sec), st.st_nlink,
-                                   ficheiros[j]->d_ino, psw->pw_name, gr->gr_name,
-                                       ConvierteModo2(st.st_mode), st.st_size, nomeFich);
-                        } else // tamaño e nome
-                            printf("%9ld %s\n", st.st_size, nomeFich);
+                    if (recursivo == 1 && ficheiros[j]->d_type == 4) { // reca
+                        listarFicheiros(pathRec,1,numrec+1);
                     }
                     free(ficheiros[j]);
-            }
-            /*for (j=0; j<n; j++) if(recursivo == 1 && ficheiros[j]->d_type==4) // reca
-            if(strcmp(ficheiros[j]->d_name,".")!=0 && strcmp(ficheiros[j]->d_name,"..")!=0){
-                for(k = 0; k < MAXARGS, ficheiros[j]->d_type==4; k++){
-                    if(fichOcultos && argRecAux < 1) { strcpy(argsRec[k],"-hid "); argRecAux = 1; }
-                    else if(listarLongo && argRecAux < 2) { strcpy(argsRec[k],"-long "); argRecAux = 2;}
-                    else if(darLinks && argRecAux < 3) { strcpy(argsRec[k],"-link "); argRecAux = 3;}
-                    else if(datasAcceso && argRecAux < 4) { strcpy(argsRec[k],"-hid "); argRecAux = 4;}
-                    else {
-                        argsRec[k] = malloc(256);
-                        strcpy(nomeDirRec,argumentos[i]);
-                        strcat(nomeDirRec,"/"); strcat(nomeDirRec,ficheiros[j]->d_name);
-                        strcpy(argsRec[k],nomeDirRec); j++;
-                    }
+                    // facer free de pathArr ?
                 }
-                listarFicheiros(argsRec,1);
-            }*/
+            }
             free(ficheiros);
         }
     }
@@ -159,8 +167,7 @@ void borrarFicheiros(char *argumentos[], bool recursivo) {
     int i, j, n;
     struct stat st;
     struct dirent **ficheiros;
-    char *s[2], nomeAux[MAX_PATHSTRING], path[MAX_PATHSTRING],
-    nomeFich[MAX_PATHSTRING], pathAux[MAX_PATHSTRING];
+    char *s[2], path[MAX_PATHSTRING], nomeFich[MAX_PATHSTRING], pathAux[MAX_PATHSTRING];
 
     if (argumentos == NULL || *argumentos == NULL) {
         strerror(EINVAL);
@@ -361,130 +368,14 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
 
 
 
-void create (char *argumentos[], char * argPal){
+void create (char *argumentos[]){
     if(strcmp(argumentos[0],"-f")==0)
         if(open(argumentos[1], O_CREAT,0777)<0)
-            perror("No se ha podido crear el fichero");
-            
-        
-    
-    if( mkdir(argumentos[0],0777);<0)
-        perror("No se ha podido crear el directorio");
+            perror("Non puido crearse o ficheiro");
+    if( mkdir(argumentos[0],0777) < 0)
+        perror("Non puido crearse o directorio");
        
 }
-
-
-
-char LetraTF (mode_t m){
-    switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
-        case S_IFSOCK: return 's'; /*socket */
-        case S_IFLNK: return 'l'; /*symbolic link*/
-        case S_IFREG: return '-'; /* fichero normal*/
-        case S_IFBLK: return 'b'; /*block device*/
-        case S_IFDIR: return 'd'; /*directorio */
-        case S_IFCHR: return 'c'; /*char device*/
-        case S_IFIFO: return 'p'; /*pipe*/
-        default: return '?'; /*desconocido, no deberia aparecer*/
-    }
-}
-
-char * ConvierteModo (mode_t m, char *permisos){
-    strcpy (permisos,"---------- ");
-
-    permisos[0]=LetraTF(m);
-    if (m&S_IRUSR) permisos[1]='r';
-    if (m&S_IWUSR) permisos[2]='w';
-    if (m&S_IXUSR) permisos[3]='x';
-    if (m&S_IRGRP) permisos[4]='r';
-    if (m&S_IWGRP) permisos[5]='w';
-    if (m&S_IXGRP) permisos[6]='x';
-    if (m&S_IROTH) permisos[7]='r';
-    if (m&S_IWOTH) permisos[8]='w';
-    if (m&S_IXOTH) permisos[9]='x';
-    if (m&S_ISUID) permisos[3]='s';
-    if (m&S_ISGID) permisos[6]='s';
-    if (m&S_ISVTX) permisos[9]='t';
-
-    return permisos;
-}
-
-void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong, bool HaiAcc, bool HaiLink) {
-    struct stat datosArchivo;
-    char permisos[10];
-
-    if (numDir == 0)  {
-        char s[MAXDIR];
-        getcwd(s, MAXDIR);
-        printf("%s\n", s);
-        return;
-    } else {
-
-
-        for (int i = numOpcions; i <= numDir + numOpcions - 1; ++i) {
-            if (stat(argumentos[i], &datosArchivo) < 0) {//Leo el archivo qeu me dan y si es un acceso directo, cojo los datos del acceso directo
-                perror("Error al obtener informacion del archivo");
-                return;
-            } else {
-                char L = LetraTF(datosArchivo.st_mode);
-                if (strcmp(&L, "l") != 0) {
-                    HaiLink=false;
-
-                    if (lstat(argumentos[i], &datosArchivo) < 0) {
-                        perror("Error al obtener informacion del archivo");
-                        return;
-                    }
-                }
-
-                    if (!HaiLong) {
-                        if (stat(argumentos[i], &datosArchivo) < 0) {
-                            perror("Error al obtener informacion del archivo");
-                            return;
-                        } else {
-                            printf("%ld  %s", datosArchivo.st_size, argumentos[i]);
-                        }
-
-                    } else {
-                        struct tm *timeinfo;
-                        if (HaiAcc) {
-                            timeinfo = localtime(&datosArchivo.st_atime);
-
-                        } else {
-                            timeinfo = localtime(&datosArchivo.st_mtime);
-                        }
-
-
-                        printf("%d-%d-%d %d:%d   %ld  ( %ld)    %s  %s  %s    ",
-                               timeinfo->tm_mday, timeinfo->tm_mon + 1,timeinfo->tm_year + 1900,timeinfo->tm_hour,
-                               timeinfo->tm_min, datosArchivo.st_nlink, datosArchivo.st_ino,getpwuid(datosArchivo.st_uid)->pw_name,
-                               getpwuid(datosArchivo.st_gid)->pw_name,ConvierteModo(datosArchivo.st_mode, permisos));
-
-                        if (HaiLink) {
-
-                            char  *path = argumentos[i]; // Ruta al enlace simbólico
-                            char Destino[100]; // Buffer para almacenar el destino del enlace
-
-                            // Leemos el enlace simbólico y almacenamos el destino en 'buf'
-                            ssize_t len = readlink(path, Destino, sizeof(Destino)-1);
-
-                            if (len != -1) {
-                                printf("%lu  %s  ->  %s", datosArchivo.st_size, argumentos[i], Destino);
-                            } else {
-                                perror("Error al leer el enlace simbólico");
-                                return;
-                            }
-                        } else
-                            printf("%ld  %s\n", datosArchivo.st_size, argumentos[i]);
-                    }
-                }
-            }
-        }
-    }
-
-
-
-
-
-
 
 void stats (char *argumentos[]){
     int numComandos=0, numDir=0;

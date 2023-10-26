@@ -86,12 +86,12 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
         else if(strcmp(argPpal,"deltree")==0)
             borrarFicheiros(argumentos,true);
         else if (strcmp(argPpal, "create") == 0)
-            create(argumentos, argPpal);
+            create(argumentos);
         else if (strcmp(argPpal, "list") == 0)
-            listarFicheiros(argumentos, 0);
+            listarFicheiros(argumentos, 0, 0);
         else if (strcmp(argPpal, "stat") == 0)
             stats(argumentos);
-       else if 
+       else
             printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
     }
 

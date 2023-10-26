@@ -31,13 +31,13 @@ void Cmd_close (char *argumentos[], taboaFicheiros *t);
 void Cmd_dup (char * argumentos[], taboaFicheiros *t);
 void listarAbertos(taboaFicheiros t);
 
-void listarFicheiros(char *argumentos[], short int modoRec);
+void listarFicheiros(char *argumentos[], short int modoRec, int numrec);
 void borrarFicheiros(char *argumentos[], bool recursivo);
 
 int cambiarDirectorio(char *argumentos[]);
 void pecharTodoFicheiro(taboaFicheiros *t);
 
-void create (char *argumentos[], char * argPal);
+void create (char *argumentos[]);
 void stats (char *argumentos[]);
 
 #endif
