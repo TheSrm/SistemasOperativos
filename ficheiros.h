@@ -37,6 +37,6 @@ int cambiarDirectorio(char *argumentos[]);
 void pecharTodoFicheiro(taboaFicheiros *t);
 
 void create (char *argumentos[], char * argPal);
-void stats (char *argumentos[], char *argPpal);
+void stats (char *argumentos[]);
 
 #endif
