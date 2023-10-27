@@ -1,5 +1,5 @@
 #include "ficheiros.h"
-
+//Devolve o tipo de ficheiro
 char LetraTF (mode_t m)
 {
     switch (m&S_IFMT) { /*and bit a bit con los bits de formato,0170000 */
@@ -392,12 +392,12 @@ void stats (char *argumentos[]){
         printf("%s\n", s);
         return;
     }
-
+//Se o argumento é baleiro,  non se pode dar a infomración dese ficheiro
     if (strcmp(argumentos[0],"")==0) {
         printf("No ejecutado, no such file or directory");
         return;
     }
-
+//Contamos na entrada proporcionada cantos ficheiros se introduciron, así como que opcions de stat están presentes no comando introducido
     for (int j = 0; argumentos[j]!=NULL; ++j) {
         if (strcmp(argumentos[j],"-long")==0){
             numComandos++;
@@ -415,7 +415,7 @@ void stats (char *argumentos[]){
         }
 
     }
-
+//Funcion auxiliar para mostrar por pantalla segundo os datos introducidos.
     ImprimirDatos(argumentos,numDir,numComandos,HaiLong,HaiAcc,HaiLink);
 }
 

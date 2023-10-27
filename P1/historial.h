@@ -3,7 +3,7 @@
 
 #include "definicionsBase.h"
 
-#define ENTRADA_MAX 50
+#define ENTRADA_MAX 128
 #define HISTNULL NULL
 
 typedef struct hNode{
