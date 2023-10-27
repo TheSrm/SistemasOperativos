@@ -4,7 +4,7 @@
 // Autor2: Daniel Ruibal Balboa
 
 void imprPrompt(){
-    printf("$\t");
+    printf("$:- ");
 }
 
 int main(){

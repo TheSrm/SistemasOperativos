@@ -56,6 +56,7 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             shutDown(rematado);
             free(entrada);
             fflush(stdin);
+            borrarHist(h);
             free(*h);
             pecharTodoFicheiro(t);
         } else if (strcmp(argPpal, "hist") == 0) {

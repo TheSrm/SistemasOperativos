@@ -155,9 +155,9 @@ void listarFicheiros(char *argumentos[], short int modoRec, int numrec){
                         listarFicheiros(pathRec,1,numrec+1);
                     }
                     free(ficheiros[j]);
-                    // facer free de pathArr ?
                 }
             }
+            free(pathArr);
             free(ficheiros);
         }
     }

@@ -33,13 +33,13 @@ void imprimirComando(char* cmd){
     else if (strcmp(cmd,"create")==0)
         printf("Crea un directorio ou un archivo con -f, en ambos casos crearase co nome introducido \n");
     else if (strcmp(cmd,"stat")==0)
-        printf("Ofrece as datos sobre un ficheiro, con -long  da mais datos, -long -acc da a fecha de modificación e -long -link, mostra qe ficheiro apunta un link simbólico\n");
+        printf("Ofrece as datos sobre un ficheiro, con -long  da mais datos, -long -acc da a fecha de modificación e -long -link, mostra qe ficheiro apunta un link simbolico\n");
     else if (strcmp(cmd,"delete")==0)
-        printf("Borra ficheros o directorios vacíos indicados por el usuario \n");
+        printf("Borra ficheiros ou directorios baleiros indicados polo usuario \n");
     else if (strcmp(cmd,"list")==0)
-        printf("Lista os contidos dun directorio, -hid mostra os ocultos, -recb é recursivo antes, - reca é recursivo despois, - acc, mostra a data de acceso -long mostra datos coma numero de inodo, tamaño, usuario e grupo... -link, mostra a onde apunta o link simbólico \n");
+        printf("Lista os contidos dun directorio\n -hid mostra os ocultos, -recb é recursivo antes, - reca é recursivo despois, - acc, mostra a data de acceso -long mostra datos coma numero de inodo, tamaño, usuario e grupo..., -link mostra a onde apunta o link simbólico \n");
     else if (strcmp(cmd,"deltree")==0)
-        printf(" Borra directorios o ficheros no vacíos recursivamente\n");
+        printf("Borra directorios o ficheros no vacíos recursivamente\n");
     else
         printf("Ese comando non existe\n");
 }
@@ -47,7 +47,7 @@ void imprimirComando(char* cmd){
 void axudaComando(char* cmd){
     int i;
     char* nomesComandos[NUMCOMANDOS]={"authors","pid","chdir","date","time","hist","comand",
-                                   "open","close","dup","listopen","infosys","help","quit","exit","bye","create","stat","list","delete","deltree"};
+                                      "open","close","dup","listopen","infosys","help","quit","exit","bye","create","stat","list","delete","deltree"};
     if(cmd==NULL)
         for(i=0; i<NUMCOMANDOS; i++)
             printf("Comando %d: %s\n", i, nomesComandos[i]);
@@ -55,4 +55,3 @@ void axudaComando(char* cmd){
         imprimirComando(cmd);
     }
 }
-
