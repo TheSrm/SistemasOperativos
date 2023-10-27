@@ -13,8 +13,7 @@
 
 #define NULLFICH NULL
 #define MAXNAME 30
-#define MAX_PATHSTRING 256
-#define MAXDIR 100
+#define MAX_PATHSTRING 1024
 
 typedef struct ficheiro{
     unsigned int descriptor;

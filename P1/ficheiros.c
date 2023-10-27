@@ -13,9 +13,8 @@ char LetraTF (mode_t m)
         default: return '?'; /*desconocido, no deberia aparecer*/
     }
 }
-
-char * ConvierteModo2 (mode_t m)
-{
+//Da os permisos do ficheiro
+char * ConvierteModo2 (mode_t m){
     static char permisos[12];
     strcpy (permisos,"---------- ");
 
@@ -36,49 +35,50 @@ char * ConvierteModo2 (mode_t m)
     return permisos;
 }
 
+//Funcion auxiliar para imprimir os datos dun arquivo segundo os parametros que nos dan
 void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong, bool HaiAcc, bool HaiLink) {
-    struct stat datosArchivo;
+    struct stat *datosArchivo = malloc(sizeof(struct stat));//Struct para almacenar datos de ficheiro
 
-    if (numDir == 0)  {
-        char s[MAXDIR];
-        getcwd(s, MAXDIR);
+    if (numDir == 0)  {//Se non hai directorios, mostro a carpeta onde estoru
+        char s[MAX_PATHSTRING];
+        getcwd(s, MAX_PATHSTRING);
         printf("%s\n", s);
         return;
     } else {
         for (int i = numOpcions; i <= numDir + numOpcions - 1; ++i){
-            if (stat(argumentos[i], &datosArchivo) < 0) {//Leo el archivo qeu me dan y si es un acceso directo, cojo los datos del acceso directo
+            if (stat(argumentos[i], datosArchivo) < 0) {//Leo el archivo que me dan y si es un acceso directo, cojo los datos del acceso directo
                 perror("Erro ao obter informacion do ficheiro");
                 return;
             } else {
-                char L = LetraTF(datosArchivo.st_mode);
-                if (strcmp(&L, "l") != 0) {
+                char L = LetraTF(datosArchivo->st_mode);
+                if (strcmp(&L, "l") != 0) {//Si ponen -link, pero no es un link simbólico, entonces no muestro a donde apunta el link, pues no apunta a nada
                     HaiLink=false;
 
-                    if (lstat(argumentos[i], &datosArchivo) < 0) {
+                    if (lstat(argumentos[i], datosArchivo) < 0) {
                         perror("Erro ao obter informacion do ficheiro (link)");
                         return;
                     }
                 }
 
-                if (!HaiLong) {
-                    if (stat(argumentos[i], &datosArchivo) < 0) {
+                if (!HaiLong) {//Se non puxeron long, so mostro tamaño e nome de ficheiro
+                    if (stat(argumentos[i], datosArchivo) < 0) {
                         perror("Erro ao obter informacion do ficheiro");
                         return;
                     } else
-                        printf("%9ld  %s\n", datosArchivo.st_size, argumentos[i]);
+                        printf("%9ld  %s\n", datosArchivo->st_size, argumentos[i]);
                 } else {
-                    struct tm *timeinfo;
+                    struct tm *timeinfo;//Struct para almacenar o tempo, terá tempo de ultimo acceso, ou de modificación segundo o introducido
                     if (HaiAcc)
-                        timeinfo = localtime(&datosArchivo.st_atime);
+                        timeinfo = localtime(&datosArchivo->st_atime);
                     else
-                        timeinfo = localtime(&datosArchivo.st_mtime);
-
+                        timeinfo = localtime(&datosArchivo->st_mtime);
+                    //Mostro o tempo,numero de links, numero de inodo, usuario e grupo e permisos de archivo,
                     printf("%02d-%02d-%d %02d:%02d   %lu (%ld) %s %s %s",
                            timeinfo->tm_mday, timeinfo->tm_mon + 1,timeinfo->tm_year + 1900,timeinfo->tm_hour,
-                           timeinfo->tm_min, datosArchivo.st_nlink, datosArchivo.st_ino,getpwuid(datosArchivo.st_uid)->pw_name,
-                           getgrgid(datosArchivo.st_gid)->gr_name,ConvierteModo2(datosArchivo.st_mode));
+                           timeinfo->tm_min, datosArchivo->st_nlink, datosArchivo->st_ino,getpwuid(datosArchivo->st_uid)->pw_name,
+                           getgrgid(datosArchivo->st_gid)->gr_name,ConvierteModo2(datosArchivo->st_mode));
 
-                    if (HaiLink) {
+                    if (HaiLink) {//Se é un link simbólico e introduciu -link, dou o dato de a onde apunta o link, así como o tamaño do link
                         char  *path = argumentos[i]; // Ruta al enlace simbólico
                         char Destino[100]; // Buffer para almacenar el destino del enlace
 
@@ -86,26 +86,27 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
                         ssize_t len = readlink(path, Destino, sizeof(Destino)-1);
 
                         if (len != -1)
-                            printf("%lu  %s  ->  %s", datosArchivo.st_size, argumentos[i], Destino);
+                            printf("%9lu  %s  ->  %s\n", datosArchivo->st_size, argumentos[i], Destino);
                         else {
                             perror("Erro ao ler o enlace simbolico");
                             return;
                         }
                     } else
-                        printf("%9ld  %s\n", datosArchivo.st_size, argumentos[i]);
+                        printf("%9ld  %s\n", datosArchivo->st_size, argumentos[i]);//Senon, dou nome de arquivo e tamaño
 
                 }
             }
         }
     }
+    free(datosArchivo);
 }
 
 //Función para listar ficheiros nun directorio
 void listarFicheiros(char *argumentos[], short int modoRec, int numrec){
     struct dirent **ficheiros;
     char s[MAX_PATHSTRING], *nomeFich, nomeAux[MAX_PATHSTRING], separacionRec[64] = "",
-    path[MAX_PATHSTRING], *pathRec[2], **pathArr;
-    int n, i, j;
+            path[MAX_PATHSTRING], *pathRec[2];
+    int n, i, j, k;
     short int recursivo = modoRec; // 0 = nada, 1 = reca, 2 = recb
     bool fichOcultos=false, soNomes=false, listarLongo=false, darLinks=false, datasAcceso=false;
     if(argumentos == NULL || *argumentos==NULL) {
@@ -125,39 +126,38 @@ void listarFicheiros(char *argumentos[], short int modoRec, int numrec){
             n = scandir(argumentos[i], &ficheiros,NULL,alphasort);
             if(n==-1){
                 perror("Erro na lectura do directorio actual"); return;
-            } else if (n <= 2)
+            } else if (n <= 2) {
                 printf("(Directorio baleiro)\n");
-            else {
-                pathArr = malloc(sizeof(char*) * n-2);
                 free(ficheiros[0]); free(ficheiros[1]);
-                for(j=2; j<n; ++j) { // percorremos os ficheiros do directorio i
+            } else {
+                for(j=0; j<n; ++j) { // percorremos os ficheiros do directorio i
                     nomeFich = ficheiros[j]->d_name;
-                    if(argumentos[i][0]=='/') { // distinguimos entre ruta relativa e absoluta
-                        strcpy(nomeAux, realpath(argumentos[i],path)); // aqui a asignacion a path é provisional
-                        strcat(nomeAux,"/"); strcat(nomeAux,nomeFich);
-                        realpath(nomeAux,path);
-                    } else realpath(nomeFich,path);
-                    pathArr[j-2] = path;
-                    pathRec[1] = NULL;
-                    pathRec[0] = path;
-                    if (recursivo == 2 && ficheiros[j]->d_type == 4) { // recb
-                        listarFicheiros(pathRec,2, numrec+1);
-                    }
-                    // decídese se imprime en función de se empeza por punto (= fich oculto) ou non
-                    if(fichOcultos || (!fichOcultos && nomeFich[0] != '.')) {
-                        ImprimirDatos(pathArr, 1, 0, listarLongo, datasAcceso, darLinks);
-                        if(j == n-1)
-                            for(int k = 0; k <= numrec; k++)
-                                strcat(separacionRec, "--");
-                        printf("%s\n",separacionRec);
-                    }
-                    if (recursivo == 1 && ficheiros[j]->d_type == 4) { // reca
-                        listarFicheiros(pathRec,1,numrec+1);
+                    if (strcmp(nomeFich, ".") != 0 && strcmp(nomeFich, "..") != 0){
+                        realpath(argumentos[i], path);
+                            strcat(path, "/");
+                            strcat(path, nomeFich);
+                        pathRec[1] = NULL;
+                        pathRec[0] = path;
+                        if (recursivo == 2 && ficheiros[j]->d_type == 4) { // recb
+                            listarFicheiros(pathRec, 2, numrec + 1);
+                        }
+                        // decídese se imprime en función de se empeza por punto (= fich oculto) ou non
+                        if (fichOcultos || (!fichOcultos && nomeFich[0] != '.')
+                            || (!fichOcultos && strcmp(nomeFich, "..") == 0 && numrec==0) ){
+                            ImprimirDatos(pathRec, 1, 0, listarLongo, datasAcceso, darLinks);
+                            if (j == n - 1) {
+                                for (k = 0; k <= numrec; k++)
+                                    strcat(separacionRec, "--");
+                                printf("%s\n", separacionRec);
+                            }
+                        }
+                        if (recursivo == 1 && ficheiros[j]->d_type == 4) { // reca
+                            listarFicheiros(pathRec, 1, numrec + 1);
+                        }
                     }
                     free(ficheiros[j]);
                 }
             }
-            free(pathArr);
             free(ficheiros);
         }
     }
@@ -368,27 +368,26 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
 
 
 
+//Crea un ficheiro co nombe indicado
+void create (char *argumentos[]) {
 
-void create (char *argumentos[]){
-    if(strcmp(argumentos[0],"-f")==0) {
+    if (argumentos[0] == NULL)//Se non hai argumentos, non é un nome válido
+        printf("No se introduciu un nome de ficheiro valido\n");
+    else if(strcmp(argumentos[0],"-f")==0) {//SI ponen -f creo un ficheiro, sino un directorio
         if (open(argumentos[1], O_CREAT, 0777) < 0)
             perror("Non puido crearse o ficheiro");
-    }else
-
-    if( mkdir(argumentos[1],0777) < 0){
+    }else if( mkdir(argumentos[1],0777) < 0)
         perror("Non puido crearse o directorio");
-    }
-
-       
 }
 
+//Proporciona os stats dun stat dun ou mais dun  ficheiro dado
 void stats (char *argumentos[]){
     int numComandos=0, numDir=0;
-    bool HaiLong=false,HaiAcc=false,HaiLink=false;
+    bool HaiLong=false,HaiAcc=false,HaiLink=false;//Booleanos, para que funcione correctamente
 
-    if ((*argumentos)==NULL){
-        char s[MAXDIR];
-        getcwd(s, MAXDIR);
+    if ((*argumentos)==NULL){//Se non hai argumentos, poño a dirección
+        char s[MAX_PATHSTRING];
+        getcwd(s, MAX_PATHSTRING);
         printf("%s\n", s);
         return;
     }
@@ -411,7 +410,7 @@ void stats (char *argumentos[]){
             HaiLink=true;
 
         }else {
-        numDir++;
+            numDir++;
         }
 
     }

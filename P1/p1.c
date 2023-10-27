@@ -9,7 +9,7 @@ void imprPrompt(){
 
 int main(){
     bool rematado = false;
-    char* entrada = malloc(100);
+    char* entrada = malloc(256);
     historial h = crearHistBaleiro();
     taboaFicheiros t;
 
