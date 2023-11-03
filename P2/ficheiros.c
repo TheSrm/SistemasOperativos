@@ -376,7 +376,7 @@ void create (char *argumentos[]) {
     else if(strcmp(argumentos[0],"-f")==0) {//SI ponen -f creo un ficheiro, sino un directorio
         if (open(argumentos[1], O_CREAT, 0777) < 0)
             perror("Non puido crearse o ficheiro");
-    }else if( mkdir(argumentos[1],0777) < 0)
+    }else if( mkdir(argumentos[0],0777) < 0)
         perror("Non puido crearse o directorio");
 }
 

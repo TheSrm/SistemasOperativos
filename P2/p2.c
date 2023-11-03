@@ -12,6 +12,7 @@ int main(){
     char* entrada = malloc(256);
     historial h = crearHistBaleiro();
     taboaFicheiros t;
+    listaBloques l = crearTaboaBloques();
 
     crearTaboaFich(&t);
 

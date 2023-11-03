@@ -7,8 +7,9 @@
 #include "autores.h"
 #include "ficheiros.h"
 #include "help.h"
+#include "memoria.h"
 
 void lerEntrada(char* entrada, historial* h);
-void procesarEntrada(char* entrada, historial* h, bool* rematado, taboaFicheiros *t);
+void procesarEntrada(char* entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques l);
 
 #endif

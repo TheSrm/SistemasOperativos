@@ -21,4 +21,6 @@ add_executable(P2
         historial.h
         p2.c
         procesos.c
-        procesos.h)
+        procesos.h
+        memoria.c
+        memoria.h)
