@@ -48,6 +48,7 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
         for (int i = numOpcions; i <= numDir + numOpcions - 1; ++i){
             if (stat(argumentos[i], datosArchivo) < 0) {//Leo el archivo que me dan y si es un acceso directo, cojo los datos del acceso directo
                 perror("Erro ao obter informacion do ficheiro");
+                free(datosArchivo);
                 return;
             } else {
                 char L = LetraTF(datosArchivo->st_mode);
@@ -56,6 +57,7 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
 
                     if (lstat(argumentos[i], datosArchivo) < 0) {
                         perror("Erro ao obter informacion do ficheiro (link)");
+                        free(datosArchivo);
                         return;
                     }
                 }
@@ -63,6 +65,7 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
                 if (!HaiLong) {//Se non puxeron long, so mostro tamaño e nome de ficheiro
                     if (stat(argumentos[i], datosArchivo) < 0) {
                         perror("Erro ao obter informacion do ficheiro");
+                        free(datosArchivo);
                         return;
                     } else
                         printf("%9ld  %s\n", datosArchivo->st_size, argumentos[i]);
@@ -89,6 +92,7 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
                             printf("%9lu  %s  ->  %s\n", datosArchivo->st_size, argumentos[i], Destino);
                         else {
                             perror("Erro ao ler o enlace simbolico");
+                            free(datosArchivo);
                             return;
                         }
                     } else
