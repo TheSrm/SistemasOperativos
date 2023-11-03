@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 
 include_directories(.)
 
-add_executable(P1
+add_executable(P2
         autores.c
         autores.h
         definicionsBase.h
@@ -19,6 +19,6 @@ add_executable(P1
         help.h
         historial.c
         historial.h
-        p1.c
+        p2.c
         procesos.c
         procesos.h)
