@@ -35,74 +35,97 @@ char * ConvierteModo2 (mode_t m){
     return permisos;
 }
 
+void nomeDendeDireccion(char* direccion, char* nome){
+    int l = strlen(direccion), i;
+    for(i = l; direccion[i-1]!='/'; i--);
+    strcpy(nome,&direccion[i]);
+}
+
 //Funcion auxiliar para imprimir os datos dun arquivo segundo os parametros que nos dan
 void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong, bool HaiAcc, bool HaiLink) {
-    struct stat *datosArchivo = malloc(sizeof(struct stat));//Struct para almacenar datos de ficheiro
+    struct stat datosArchivo;//Struct para almacenar datos de ficheiro
+    char nome[256];
 
-    if (numDir == 0)  {//Se non hai directorios, mostro a carpeta onde estoru
+    if (numDir == 0) {//Se non hai directorios, mostro a carpeta onde estou
         char s[MAX_PATHSTRING];
         getcwd(s, MAX_PATHSTRING);
         printf("%s\n", s);
         return;
-    } else {
-        for (int i = numOpcions; i <= numDir + numOpcions - 1; ++i){
-            if (stat(argumentos[i], datosArchivo) < 0) {//Leo el archivo que me dan y si es un acceso directo, cojo los datos del acceso directo
-                perror("Erro ao obter informacion do ficheiro");
-                free(datosArchivo);
-                return;
-            } else {
-                char L = LetraTF(datosArchivo->st_mode);
-                if (strcmp(&L, "l") != 0) {//Si ponen -link, pero no es un link simbólico, entonces no muestro a donde apunta el link, pues no apunta a nada
-                    HaiLink=false;
+    }
+        //Se es un archvo normal no pasa nada, pero si tengo un link, tengo que darme los datos del link no del fichero al que apunta
 
-                    if (lstat(argumentos[i], datosArchivo) < 0) {
-                        perror("Erro ao obter informacion do ficheiro (link)");
-                        free(datosArchivo);
-                        return;
-                    }
+    else {
+        for (int i = numOpcions; i <= numDir + numOpcions - 1; ++i) {
+            if (lstat(argumentos[i], &datosArchivo) < 0) {
+                perror("Erro ao obter informacion do ficheiro (link)");
+                return;
+            }
+            char L = LetraTF(datosArchivo.st_mode);
+
+            if(argumentos[i][0]=='/')
+                nomeDendeDireccion(argumentos[i],nome);
+            else strcpy(nome,argumentos[i]);
+
+            if (strcmp(&L, "l") == 0) {//Si ponen -link, pero no es un link simbólico, entonces no muestro a donde apunta el link, pues no apunta a nada
+                char *path = argumentos[i]; // Ruta al enlace simbólico
+                char Destino[100]; // Buffer para almacenar el destino del enlace
+
+                ssize_t len = readlink(path, Destino, sizeof(Destino) - 1);
+                Destino[len] = 0;
+
+                if (len < 0) {
+                    perror("Erro ao ler o enlace simbolico");
+                    return;
                 }
 
-                if (!HaiLong) {//Se non puxeron long, so mostro tamaño e nome de ficheiro
-                    if (stat(argumentos[i], datosArchivo) < 0) {
-                        perror("Erro ao obter informacion do ficheiro");
-                        free(datosArchivo);
-                        return;
-                    } else
-                        printf("%9ld  %s\n", datosArchivo->st_size, argumentos[i]);
+                if (!HaiLong) {
+                    printf("%9lu  %s\n", strlen(Destino), argumentos[i]);
                 } else {
                     struct tm *timeinfo;//Struct para almacenar o tempo, terá tempo de ultimo acceso, ou de modificación segundo o introducido
                     if (HaiAcc)
-                        timeinfo = localtime(&datosArchivo->st_atime);
+                        timeinfo = localtime(&datosArchivo.st_atime);
                     else
-                        timeinfo = localtime(&datosArchivo->st_mtime);
+                        timeinfo = localtime(&datosArchivo.st_mtime);
+
+                    printf("%02d-%02d-%d %02d:%02d   %lu (%ld) %s %s %s",timeinfo->tm_mday, timeinfo->tm_mon + 1,
+                           timeinfo->tm_year + 1900, timeinfo->tm_hour,timeinfo->tm_min, datosArchivo.st_nlink,
+                           datosArchivo.st_ino,getpwuid(datosArchivo.st_uid)->pw_name,getgrgid(datosArchivo.st_gid)->gr_name,
+                           ConvierteModo2(datosArchivo.st_mode));
+                    if(HaiLink) {
+                        //Mostro o tempo,numero de links, numero de inodo, usuario e grupo e permisos de archivo,
+                        printf(" %9lu  %s -> %s\n", strlen(Destino), nome, Destino);
+                    }else
+                        printf("%9lu  %s\n",strlen(Destino), nome);
+
+                }
+            } else {
+
+                if (stat(argumentos[i], &datosArchivo) < 0) {
+                    perror("Erro ao obter informacion do ficheiro");
+                    return;
+                }
+
+
+                if (!HaiLong)
+                    printf("%9ld  %s\n", datosArchivo.st_size, nome);
+                else {
+                    struct tm *timeinfo;//Struct para almacenar o tempo, terá tempo de ultimo acceso, ou de modificación segundo o introducido
+                    if (HaiAcc)
+                        timeinfo = localtime(&datosArchivo.st_atime);
+                    else
+                        timeinfo = localtime(&datosArchivo.st_mtime);
                     //Mostro o tempo,numero de links, numero de inodo, usuario e grupo e permisos de archivo,
-                    printf("%02d-%02d-%d %02d:%02d   %lu (%ld) %s %s %s",
-                           timeinfo->tm_mday, timeinfo->tm_mon + 1,timeinfo->tm_year + 1900,timeinfo->tm_hour,
-                           timeinfo->tm_min, datosArchivo->st_nlink, datosArchivo->st_ino,getpwuid(datosArchivo->st_uid)->pw_name,
-                           getgrgid(datosArchivo->st_gid)->gr_name,ConvierteModo2(datosArchivo->st_mode));
-
-                    if (HaiLink) {//Se é un link simbólico e introduciu -link, dou o dato de a onde apunta o link, así como o tamaño do link
-                        char  *path = argumentos[i]; // Ruta al enlace simbólico
-                        char Destino[100]; // Buffer para almacenar el destino del enlace
-
-                        // Leemos el enlace simbólico y almacenamos el destino en 'buf'
-                        ssize_t len = readlink(path, Destino, sizeof(Destino)-1);
-
-                        if (len != -1)
-                            printf("%9lu  %s  ->  %s\n", datosArchivo->st_size, argumentos[i], Destino);
-                        else {
-                            perror("Erro ao ler o enlace simbolico");
-                            free(datosArchivo);
-                            return;
-                        }
-                    } else
-                        printf("%9ld  %s\n", datosArchivo->st_size, argumentos[i]);//Senon, dou nome de arquivo e tamaño
+                    printf("%02d-%02d-%d %02d:%02d   %lu (%ld) %s %s %s %9ld  %s\n",
+                           timeinfo->tm_mday, timeinfo->tm_mon + 1, timeinfo->tm_year + 1900, timeinfo->tm_hour,
+                           timeinfo->tm_min, datosArchivo.st_nlink, datosArchivo.st_ino,
+                           getpwuid(datosArchivo.st_uid)->pw_name,
+                           getgrgid(datosArchivo.st_gid)->gr_name, ConvierteModo2(datosArchivo.st_mode),
+                           datosArchivo.st_size, nome);
 
                 }
             }
         }
     }
-    free(datosArchivo);
 }
 
 //Función para listar ficheiros nun directorio
