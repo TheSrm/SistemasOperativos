@@ -161,8 +161,8 @@ void listarFicheiros(char *argumentos[], short int modoRec, int numrec){
                     nomeFich = ficheiros[j]->d_name;
                     if (strcmp(nomeFich, ".") != 0 && strcmp(nomeFich, "..") != 0){
                         realpath(argumentos[i], path);
-                            strcat(path, "/");
-                            strcat(path, nomeFich);
+                        strcat(path, "/");
+                        strcat(path, nomeFich);
                         pathRec[1] = NULL;
                         pathRec[0] = path;
                         if (recursivo == 2 && ficheiros[j]->d_type == 4) { // recb
@@ -266,15 +266,14 @@ char* nomeFichSegundoDescriptor(int descr, taboaFicheiros t){
 void insertarFicheiroEnTaboa(int modo, char* nomefich, unsigned int desc, taboaFicheiros *t) {
     taboaFicheiros tAux, tCnt;
     tAux = malloc(sizeof(ficheiro));
-    tAux->nome = malloc(sizeof(char)*50);
 
     strcpy(tAux->nome,nomefich);
     tAux->modo=modo;
     tAux->descriptor=desc;
-    if(*t==NULLFICH){
-        tAux->next=NULLFICH;
+    tAux->next=NULLFICH;
+    if(*t==NULLFICH)
         *t = tAux;
-    } else {
+    else {
         for (tCnt = *t; tCnt->next != NULLFICH; tCnt = tCnt->next);
         tCnt->next = tAux;
     }
@@ -290,10 +289,9 @@ void eliminarFicheiroDeTaboa(int descr, taboaFicheiros *t) {
     }
     else if(tElim->next==NULLFICH){ //Comprobamos se a táboa ten un único elemento
         if(tElim->descriptor!=descr){
-            printf("Arquivo co descriptor dado non atopado");
+            printf("Ficheiro co descriptor dado non atopado");
             return;
         } else{ // pechamos o ficheiro e liberamos memoria
-            free(tElim->nome);
             free(tElim);
             *t = NULL;
         }
@@ -303,22 +301,24 @@ void eliminarFicheiroDeTaboa(int descr, taboaFicheiros *t) {
             if(tElim->descriptor==descr)//E o descriptor coincide
                 tAux->next=NULLFICH; //tAux pasará a ser o último elemento da táboa
             else {//Se non atopamos o archivo co descriptor indicado
-                printf("Arquivo co descriptor dado non atopado");
+                printf("Ficheiro co descriptor dado non atopado");
                 return;
             }
         else {
-            tAux->next = tElim->next; // Illamos o elemento a eliminar
-            free(tElim->nome);//Liberamos a memoria
-            free(tElim);
+            tAux->next = tElim->next;
+            tElim->next = NULL;
+            free(tElim);//Liberamos a memoria
         }
     }
 }
 
 void pecharTodoFicheiro(taboaFicheiros *t){
-    taboaFicheiros tAux = *t;
-    for (; tAux != NULL; tAux = tAux->next) {
-        close(tAux->descriptor);
-        eliminarFicheiroDeTaboa(tAux->descriptor, t);
+    taboaFicheiros tAux;
+    int df;
+    for (tAux = *t; tAux != NULL; tAux = tAux->next) {
+        df = tAux->descriptor;
+        close(df);
+        eliminarFicheiroDeTaboa(df, t);
     }
 }
 
@@ -351,7 +351,7 @@ void Cmd_open (char * tr[], taboaFicheiros *t) {
         else break;
 
     if ((df = open(tr[0], mode, 0777)) == -1)//Se da un erro o comando open
-        printf("Imposible engadir ficheiro");//Mostramos a mensaxe e
+        perror("Imposible engadir ficheiro");//Mostramos a mensaxe e
     else {
         insertarFicheiroEnTaboa(mode, tr[0],df, t);//Se non insertamos e mostramos un mensaxe de o insertado
         printf("Engadida entrada a taboa ficheiros abertos %s\n", tr[0]);
@@ -363,18 +363,18 @@ void Cmd_close (char *tr[], taboaFicheiros *t){
     int df;
 
     if (tr[0]==NULL || (df=atoi(tr[0]))<0) { //Se non hai parametros,
-        listarAbertos(*t);//Listo os archivos abertos e retorno
+        listarAbertos(*t);//Listo os ficheiros abertos e retorno
         return;
     }
-    if (close(df)==-1)//Se falla o close, non podemos cerrar o archivo
-        printf("Imposible pechar descriptor\n");// Enviamos unha mensaxe e
+    if (close(df)==-1)//Se falla o close, non podemos pechar o ficheiro
+        printf("Imposible pechar descriptor\n");// Enviamos unha mensaxe
     else
-        eliminarFicheiroDeTaboa(df,t);//Eliminamos o ficheiro indicado
+        eliminarFicheiroDeTaboa(df,t); //Eliminamos o ficheiro indicado
 }
 
 // Duplicamos un archivo polo seu file descriptor
 void Cmd_dup (char * tr[], taboaFicheiros *t){
-    int df, duplicado;//Variables iniciais
+    int df, duplicado, mododup;//Variables iniciais
     char aux[MAXNAME],*p;
 
     if (tr[0]==NULL || (df=atoi(tr[0]))<0) { // sen parámetro ou é 0
@@ -389,7 +389,8 @@ void Cmd_dup (char * tr[], taboaFicheiros *t){
     sprintf (aux,"dup %d (%s)",df, p);
     duplicado = dup(df);
 
-    insertarFicheiroEnTaboa(fcntl(df,F_GETFD),aux,duplicado,t);//Senon insertamos o ficheiro en taboa e
+    mododup=fcntl(df,F_GETFL)-32768;
+    insertarFicheiroEnTaboa(mododup,aux,duplicado,t);//Senon insertamos o ficheiro en taboa e
     printf("Ficheiro duplicado correctamente\n");//Mostramos o mensaxe de proceso correcto.
 }
 

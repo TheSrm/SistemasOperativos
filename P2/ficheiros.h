@@ -18,7 +18,7 @@
 typedef struct ficheiro{
     unsigned int descriptor;
     int modo;
-    char *nome;
+    char nome[128];
     struct ficheiro *next;
 }ficheiro;
 
