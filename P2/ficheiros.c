@@ -57,7 +57,7 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
     else {
         for (int i = numOpcions; i <= numDir + numOpcions - 1; ++i) {
             if (lstat(argumentos[i], &datosArchivo) < 0) {
-                perror("Erro ao obter informacion do ficheiro (link)");
+                perror("Erro ao obter informacion do ficheiro");
                 return;
             }
             char L = LetraTF(datosArchivo.st_mode);
@@ -66,7 +66,7 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
                 nomeDendeDireccion(argumentos[i],nome);
             else strcpy(nome,argumentos[i]);
 
-            if (strcmp(&L, "l") == 0) {//Si ponen -link, pero no es un link simbólico, entonces no muestro a donde apunta el link, pues no apunta a nada
+            if (L == 'l') {//Si ponen -link, pero no es un link simbólico, entonces no muestro a donde apunta el link, pues no apunta a nada
                 char *path = argumentos[i]; // Ruta al enlace simbólico
                 char Destino[100]; // Buffer para almacenar el destino del enlace
 
@@ -128,12 +128,68 @@ void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong,
     }
 }
 
+int crearComandoRecursivo(char **arg, char *path, bool hid, bool longo, bool link, bool acc){
+    int modo = hid + 2 * longo + 4 * link + 8 * acc, pathPos;
+    switch (modo) {
+        case 1:
+            arg[0]="-hid"; pathPos=1;
+            break;
+        case 2:
+            arg[0]="-long"; pathPos=1;
+            break;
+        case 4:
+            arg[0]="-link"; pathPos=1;
+            break;
+        case 8:
+            arg[0]="-acc"; pathPos=1;
+            break;
+        case 3:
+            arg[0]="-hid"; arg[1]="-long"; pathPos=2;
+            break;
+        case 5:
+            arg[0]="-hid"; arg[1]="-link"; pathPos=2;
+            break;
+        case 9:
+            arg[0]="-hid"; arg[1]="-acc"; pathPos=2;
+            break;
+        case 6:
+            arg[0]="-long"; arg[1]="-link"; pathPos=2;
+            break;
+        case 10:
+            arg[0]="-long"; arg[1]="-acc"; pathPos=2;
+            break;
+        case 12:
+            arg[0]="-link"; arg[1]="-acc"; pathPos=2;
+            break;
+        case 7:
+            arg[0]="-hid"; arg[1]="-long"; arg[2]="-link"; pathPos=3;
+            break;
+        case 11:
+            arg[0]="-hid"; arg[1]="-long"; arg[2]="-acc"; pathPos=3;
+            break;
+        case 13:
+            arg[0]="-hid"; arg[1]="-link"; arg[2]="-acc"; pathPos=3;
+            break;
+        case 14:
+            arg[0]="-long"; arg[1]="-link"; arg[2]="-acc"; pathPos=3;
+            break;
+        case 15:
+            arg[0]="-hid"; arg[1]="-long"; arg[2]="-link"; arg[3]="-acc"; pathPos=4;
+        default:
+            pathPos=0;
+            break;
+    }
+    arg[pathPos]=path;
+    arg[pathPos+1]=NULL;
+    return pathPos;
+}
+
 //Función para listar ficheiros nun directorio
 void listarFicheiros(char *argumentos[], short int modoRec, int numrec){
     struct dirent **ficheiros;
     char s[MAX_PATHSTRING], *nomeFich, nomeAux[MAX_PATHSTRING], separacionRec[64] = "",
-            path[MAX_PATHSTRING], *pathRec[2];
-    int n, i, j, k;
+            path[MAX_PATHSTRING], *pathRec[6];
+    int n, i, j, k, numOps;
     short int recursivo = modoRec; // 0 = nada, 1 = reca, 2 = recb
     bool fichOcultos=false, soNomes=false, listarLongo=false, darLinks=false, datasAcceso=false;
     if(argumentos == NULL || *argumentos==NULL) {
@@ -163,15 +219,15 @@ void listarFicheiros(char *argumentos[], short int modoRec, int numrec){
                         realpath(argumentos[i], path);
                         strcat(path, "/");
                         strcat(path, nomeFich);
-                        pathRec[1] = NULL;
-                        pathRec[0] = path;
+                        numOps = crearComandoRecursivo(pathRec,path,fichOcultos,
+                                                       listarLongo,darLinks,datasAcceso);
                         if (recursivo == 2 && ficheiros[j]->d_type == 4) { // recb
                             listarFicheiros(pathRec, 2, numrec + 1);
                         }
                         // decídese se imprime en función de se empeza por punto (= fich oculto) ou non
                         if (fichOcultos || (!fichOcultos && nomeFich[0] != '.')
                             || (!fichOcultos && strcmp(nomeFich, "..") == 0 && numrec==0) ){
-                            ImprimirDatos(pathRec, 1, 0, listarLongo, datasAcceso, darLinks);
+                            ImprimirDatos(pathRec, 1, numOps, listarLongo, datasAcceso, darLinks);
                             if (j == n - 1) {
                                 for (k = 0; k <= numrec; k++)
                                     strcat(separacionRec, "--");
@@ -315,11 +371,13 @@ void eliminarFicheiroDeTaboa(int descr, taboaFicheiros *t) {
 void pecharTodoFicheiro(taboaFicheiros *t){
     taboaFicheiros tAux;
     int df;
-    for (tAux = *t; tAux != NULL; tAux = tAux->next) {
-        df = tAux->descriptor;
-        close(df);
-        eliminarFicheiroDeTaboa(df, t);
-    }
+
+    if(*t != NULL)
+        for (tAux = *t; tAux->next != NULL; tAux = tAux->next) {
+            df = tAux->descriptor;
+            close(df);
+            eliminarFicheiroDeTaboa(df, t);
+        }
 }
 
 // Imprime por pantalla os ficherios que constan abertos na táboa t
