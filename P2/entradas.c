@@ -12,7 +12,7 @@ void lerEntrada(char *entrada, historial* h) {
         printf("Erro ao insertar o comando no historial");//Indicamos o erro e seguimos
 }
 //Repetimos un comando cuxa posición na lista sexa a indicada
-void repetirComando(char **argumentos, historial *h, taboaFicheiros *t, listaBloques l){
+void repetirComando(char **argumentos, historial *h, taboaFicheiros *t){
     int repe = atoi(argumentos[0]), i;//Inicializamos variables para comprobar funcionamento correcto
     historial hAux; // hAux: copia estática do historial actual
 
@@ -29,11 +29,11 @@ void repetirComando(char **argumentos, historial *h, taboaFicheiros *t, listaBlo
         printf("Para evitar bucles infinitos non se pode chamar a un 'comand' con outro\n");//Imprimimos unha mensaxe indicandoo e voltamos ao bucle
         return;
     }
-    procesarEntrada(hAux->comando, h, false, t, l);//Se ningunha das condicions anteriores fallou, repetimos o comando indicado
+    procesarEntrada(hAux->comando, h, false, t);//Se ningunha das condicions anteriores fallou, repetimos o comando indicado
 }
 
 //Troceamos o comando en argPpal, donde se garda o comando e argumentos[], donde gardaremos os argumentos de cada comando
-void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques l) {
+void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t) {
     int i;//Creamos as variables necesarias para o correcto funcionamento da función
     char *argPpal, *argumentos[MAXARGS];
 
@@ -55,10 +55,11 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
         else if (strcmp(argPpal, "quit") == 0 || strcmp(argPpal, "exit") == 0 || strcmp(argPpal, "bye") == 0) {
             shutDown(rematado);
             free(entrada);
-            fflush(stdin);
             borrarHist(h);
+            fflush(stdin);
             free(*h);
             pecharTodoFicheiro(t);
+            free(*t);
         } else if (strcmp(argPpal, "hist") == 0) {
             if (argumentos[0] == NULL)
                 imprimirHistorial(*h);
@@ -81,7 +82,7 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
         else if (strcmp(argPpal,"help") == 0)
             axudaComando(argumentos[0]);
         else if(strcmp(argPpal,"comand")== 0)
-            repetirComando(argumentos, h, t, l);
+            repetirComando(argumentos, h, t);
         else if(strcmp(argPpal,"delete")==0)
             borrarFicheiros(argumentos,false);
         else if(strcmp(argPpal,"deltree")==0)
@@ -92,11 +93,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             listarFicheiros(argumentos, 0, 0);
         else if (strcmp(argPpal, "stat") == 0)
             stats(argumentos);
-        else if (strcmp(argPpal,"malloc") == 0) {
-            memAlloc(l,argumentos);
-        }else if(strcmp(argPpal, "recurse") == 0)
-            recurse(argumentos);
         else
             printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
     }
+
 }
