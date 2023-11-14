@@ -1,6 +1,6 @@
 p1: p1.c entradas.o
-	gcc -g -o p1 p1.c entradas.o funcionsTemporais.o historial.o autores.o procesos.o ficheiros.o help.o
-entradas.o: entradas.c entradas.h funcionsTemporais.o historial.o autores.o procesos.o ficheiros.o help.o
+	gcc -g -o p1 p1.c entradas.o funcionsTemporais.o historial.o autores.o procesos.o ficheiros.o help.o memoria.o
+entradas.o: entradas.c entradas.h funcionsTemporais.o historial.o autores.o procesos.o ficheiros.o help.o memoria.o
 	gcc -g -c entradas.o entradas.c
 funcionsTemporais.o: funcionsTemporais.c funcionsTemporais.h
 	gcc -g -c funcionsTemporais.o funcionsTemporais.c
@@ -12,6 +12,8 @@ procesos.o: procesos.c procesos.h definicionsBase.h
 	gcc -g -c procesos.o procesos.c
 ficheiros.o: ficheiros.c ficheiros.h
 	gcc -g -c ficheiros.o ficheiros.c
+memoria.o: memoria.c memoria.h
+	gcc -g -c memoria.o memoria.c
 help.o: help.c help.h
 	gcc -g -c help.o help.c
 valgrind:
