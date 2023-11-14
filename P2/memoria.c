@@ -16,89 +16,86 @@ listaBloques crearTaboaBloques() {
     return NULL;
 }
 
-void insertarBloqueEnTaboa(listaBloques *l, double tam, void *dir, time_t data, char *tipo) {
-    listaBloques tAux, tCnt;
-    tAux = malloc(sizeof(listaBloques));
+void insertarBloqueEnTaboa(listaBloques *l, int tam, void *dir, time_t data, char *tipo) {
 
-    tAux->tipoAsignacion=tipo;
 
-    tAux->dataCreacion=data;
-    tAux->tamanoBloque=tam;
-    tAux->direccion=dir;
-    if(*l==NULL){
-        tAux->next=NULL;
+    listaBloques tAux = malloc(sizeof(bloquesMemoria ));
+
+
+
+    strcpy(tAux->tipoAsignacion, tipo);
+    tAux->dataCreacion = data;
+    tAux->tamanoBloque = tam;
+    tAux->direccion = dir;
+    tAux->next = NULL;
+
+    if (*l == NULL) {
         *l = tAux;
     } else {
+        listaBloques tCnt;
         for (tCnt = *l; tCnt->next != NULL; tCnt = tCnt->next);
         tCnt->next = tAux;
     }
 }
 
 
-
-void memAlloc(listaBloques l, char *argumentos[MAXARGS]) {
+void memAlloc(listaBloques l, char * argumentos[MAXARGS]){
+    int n;
     char **strAux;
-    double P;
 
-    if (argumentos[0] == NULL) {
+    if (argumentos[0]==NULL) {
         if (l == NULL)
-            printf("Non hai ningún bloque asignado no momento\n");
+            printf("Non hai ningún bloque asignado no momento\n");//Se non hai lista, enton non podemos listar nada
         else {
-            printf("Lista de bloques asignados para o proceso %d\n", getpid());
-            for (; l != NULL; l = l->next)
-                printf("%p\t|\t%9f\t|\t%ld\t|\t%s\t%d/%d/%02d:%02d\n",
+            printf("Lista de bloques asignados para o proceso %d", getpid());
+            for (; l != NULL; l = l->next) {//Percorremola
+                printf("%p\t|\t%9f\t|\t%ld\t|\t%s\n\"%d/%d/ %02d:%02d \n", // fai falta unha funcion que convirta time_t en string
                        l->direccion, l->tamanoBloque, l->dataCreacion,
-                       l->tipoAsignacion, localtime(&l->dataCreacion)->tm_mday,
-                       localtime(&l->dataCreacion)->tm_mon + 1,
+                       l->tipoAsignacion, localtime(&l->dataCreacion)->tm_mday, localtime(&l->dataCreacion)->tm_mon,
                        localtime(&l->dataCreacion)->tm_hour,
-                       localtime(&l->dataCreacion)->tm_min);
+                       localtime(&l->dataCreacion)->tm_min);//Imprimindo cada un dos bloques
+            }
         }
         return;
     }
 
-    if (strcmp(argumentos[0], "-free") != 0) {
-        char *fin;
-        errno = 0;
-        P = strtod(argumentos[0], &fin);
 
-        if (errno != 0) {
-            perror("Error en la conversión");
-            return;
-        }
 
-        void *A = malloc(P);
+    if (strcmp(argumentos[0],"-free")!=0) {
+        n = strtol(argumentos[0],&strAux,10);
+        if(*strAux==argumentos[0] || argumentos[0][0]==0)
+            perror("Non se introduciu un tamaño adecuado");
+
+        void *A = malloc(n);
         time_t tempo;
         tempo = time(NULL);
 
-        if (A == NULL) {
+        if (A == NULL)
             perror("Non hai memoria suficiente para realizar a asignacion");
-            return;
-        }
 
-        insertarBloqueEnTaboa(&l, P, A, tempo, "malloc\0");
+        insertarBloqueEnTaboa(&l,n,A,tempo,"malloc");
 
-        printf("Insertado bloque de tamano %.0f bytes en 0x%x\n", P, A);
-    } else if (l == NULL) {
-        printf("Non hai ningún bloque asignado\n");
-    } else {
-        char *fin;
-        errno = 0;
-        P = strtod(argumentos[0], &fin);
+    } else
+        n = strtol(argumentos[1],strAux,10);
+    if(*strAux==argumentos[1] || argumentos[1][0]==0)
+        perror("Non se introduciu un tamaño adecuado");
 
-        if (errno != 0) {
-            perror("Error en la conversión");
-            return;
-        }
+    if(l==NULL)
+        printf("Non hai ningún bloque asignado\n");//Se non hai lista, enton non podemos listar nada
+    else {
 
-        for (; l != NULL; l = l->next)
-            if (l->tamanoBloque == P) {
+        for (; l != NULL; l = l->next)//Percorremola
+            if(l->tamanoBloque==n) {
                 return;
             }
+
     }
 
-    if (l == NULL)
-        printf("Non hai bloque dese tamano asignado con malloc\n");
+    if (l==NULL)
+        printf("Non hai bloque dese tamano asignado con malloc");
 }
+
+
 
 void intRecurse (int n) {
     char automatico[TAMANO];
