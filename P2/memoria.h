@@ -9,7 +9,7 @@
 typedef struct bloquesMemoria{
     void *direccion;
     time_t dataCreacion;
-    int tamanoBloque;
+    double tamanoBloque;
     char* tipoAsignacion;
     struct bloquesMemoria *next;
 }bloquesMemoria;

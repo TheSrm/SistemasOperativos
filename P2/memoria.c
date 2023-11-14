@@ -16,11 +16,12 @@ listaBloques crearTaboaBloques() {
     return NULL;
 }
 
-void insertarBloqueEnTaboa(listaBloques *l, int tam, void *dir, time_t data, char *tipo) {
+void insertarBloqueEnTaboa(listaBloques *l, double tam, void *dir, time_t data, char *tipo) {
     listaBloques tAux, tCnt;
     tAux = malloc(sizeof(listaBloques));
 
-    strcpy(tAux->tipoAsignacion,tipo);
+    tAux->tipoAsignacion=tipo;
+
     tAux->dataCreacion=data;
     tAux->tamanoBloque=tam;
     tAux->direccion=dir;
@@ -35,60 +36,69 @@ void insertarBloqueEnTaboa(listaBloques *l, int tam, void *dir, time_t data, cha
 
 
 
-void memAlloc(listaBloques l, char * argumentos[MAXARGS]){
-    int n;
+void memAlloc(listaBloques l, char *argumentos[MAXARGS]) {
     char **strAux;
+    double P;
 
-    if (argumentos[0]==NULL) {
+    if (argumentos[0] == NULL) {
         if (l == NULL)
-            printf("Non hai ningún bloque asignado no momento\n");//Se non hai lista, enton non podemos listar nada
+            printf("Non hai ningún bloque asignado no momento\n");
         else {
-            printf("Lista de bloques asignados para o proceso %d", getpid());
-            for (; l != NULL; l = l->next)//Percorremola
-                printf("%p\t|\t%9d\t|\t%s\t|\t%s\n\"%d/%d/ %02d:%02d \n", // fai falta unha funcion que convirta time_t en string
+            printf("Lista de bloques asignados para o proceso %d\n", getpid());
+            for (; l != NULL; l = l->next)
+                printf("%p\t|\t%9f\t|\t%ld\t|\t%s\t%d/%d/%02d:%02d\n",
                        l->direccion, l->tamanoBloque, l->dataCreacion,
-                       l->tipoAsignacion, localtime(&l->dataCreacion)->tm_mday,localtime(&l->dataCreacion)->tm_mon,
-                       localtime(&l->dataCreacion)->tm_hour,localtime(&l->dataCreacion)->tm_min);//Imprimindo cada un dos bloques
+                       l->tipoAsignacion, localtime(&l->dataCreacion)->tm_mday,
+                       localtime(&l->dataCreacion)->tm_mon + 1,
+                       localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_min);
         }
+        return;
     }
 
+    if (strcmp(argumentos[0], "-free") != 0) {
+        char *fin;
+        errno = 0;
+        P = strtod(argumentos[0], &fin);
 
+        if (errno != 0) {
+            perror("Error en la conversión");
+            return;
+        }
 
-    if (strcmp(argumentos[0],"-free")!=0) {
-        n = strtol(argumentos[0],strAux,10);
-        if(*strAux==argumentos[0] || argumentos[0][0]==0)
-            perror("Non se introduciu un tamaño adecuado");
-
-        void *A = malloc(n);
+        void *A = malloc(P);
         time_t tempo;
         tempo = time(NULL);
 
-        if (A == NULL)
+        if (A == NULL) {
             perror("Non hai memoria suficiente para realizar a asignacion");
+            return;
+        }
 
-        insertarBloqueEnTaboa(&l,n,A,tempo,"malloc");
+        insertarBloqueEnTaboa(&l, P, A, tempo, "malloc\0");
 
-    } else
-        n = strtol(argumentos[1],strAux,10);
-    if(*strAux==argumentos[1] || argumentos[1][0]==0)
-        perror("Non se introduciu un tamaño adecuado");
+        printf("Insertado bloque de tamano %.0f bytes en 0x%x\n", P, A);
+    } else if (l == NULL) {
+        printf("Non hai ningún bloque asignado\n");
+    } else {
+        char *fin;
+        errno = 0;
+        P = strtod(argumentos[0], &fin);
 
-    if(l==NULL)
-        printf("Non hai ningún bloque asignado\n");//Se non hai lista, enton non podemos listar nada
-    else {
+        if (errno != 0) {
+            perror("Error en la conversión");
+            return;
+        }
 
-        for (; l != NULL; l = l->next)//Percorremola
-            if(l->tamanoBloque==n) {
+        for (; l != NULL; l = l->next)
+            if (l->tamanoBloque == P) {
                 return;
             }
-
     }
 
-    if (l==NULL)
-        printf("Non hai bloque dese tamano asignado con malloc");
+    if (l == NULL)
+        printf("Non hai bloque dese tamano asignado con malloc\n");
 }
-
-
 
 void intRecurse (int n) {
     char automatico[TAMANO];
