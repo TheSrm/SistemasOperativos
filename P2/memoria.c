@@ -17,22 +17,26 @@ listaBloques crearTaboaBloques() {
 }
 
 void insertarBloqueEnTaboa(listaBloques *l, int tam, void *dir, time_t data, char *tipo) {
-    listaBloques tAux, tCnt;
-    tAux = malloc(sizeof(listaBloques));
 
-    strcpy(tAux->tipoAsignacion,tipo);
-    tAux->dataCreacion=data;
-    tAux->tamanoBloque=tam;
-    tAux->direccion=dir;
-    if(*l==NULL){
-        tAux->next=NULL;
+
+    listaBloques tAux = malloc(sizeof(bloquesMemoria ));
+
+
+
+    strcpy(tAux->tipoAsignacion, tipo);
+    tAux->dataCreacion = data;
+    tAux->tamanoBloque = tam;
+    tAux->direccion = dir;
+    tAux->next = NULL;
+
+    if (*l == NULL) {
         *l = tAux;
     } else {
+        listaBloques tCnt;
         for (tCnt = *l; tCnt->next != NULL; tCnt = tCnt->next);
         tCnt->next = tAux;
     }
 }
-
 
 
 void memAlloc(listaBloques l, char * argumentos[MAXARGS]){
@@ -44,18 +48,21 @@ void memAlloc(listaBloques l, char * argumentos[MAXARGS]){
             printf("Non hai ningún bloque asignado no momento\n");//Se non hai lista, enton non podemos listar nada
         else {
             printf("Lista de bloques asignados para o proceso %d", getpid());
-            for (; l != NULL; l = l->next)//Percorremola
-                printf("%p\t|\t%9d\t|\t%s\t|\t%s\n\"%d/%d/ %02d:%02d \n", // fai falta unha funcion que convirta time_t en string
+            for (; l != NULL; l = l->next) {//Percorremola
+                printf("%p\t|\t%9f\t|\t%ld\t|\t%s\n\"%d/%d/ %02d:%02d \n", // fai falta unha funcion que convirta time_t en string
                        l->direccion, l->tamanoBloque, l->dataCreacion,
-                       l->tipoAsignacion, localtime(&l->dataCreacion)->tm_mday,localtime(&l->dataCreacion)->tm_mon,
-                       localtime(&l->dataCreacion)->tm_hour,localtime(&l->dataCreacion)->tm_min);//Imprimindo cada un dos bloques
+                       l->tipoAsignacion, localtime(&l->dataCreacion)->tm_mday, localtime(&l->dataCreacion)->tm_mon,
+                       localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_min);//Imprimindo cada un dos bloques
+            }
         }
+        return;
     }
 
 
 
     if (strcmp(argumentos[0],"-free")!=0) {
-        n = strtol(argumentos[0],strAux,10);
+        n = strtol(argumentos[0],&strAux,10);
         if(*strAux==argumentos[0] || argumentos[0][0]==0)
             perror("Non se introduciu un tamaño adecuado");
 

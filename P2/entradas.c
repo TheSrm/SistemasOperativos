@@ -93,6 +93,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             listarFicheiros(argumentos, 0, 0);
         else if (strcmp(argPpal, "stat") == 0)
             stats(argumentos);
+        else if (strcmp(argPpal,"malloc")==0)
+            memAlloc(l,argumentos);
         else
             printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
     }
