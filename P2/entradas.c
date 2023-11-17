@@ -61,7 +61,6 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             pecharTodoFicheiro(t);
             free(*t);
             pecharTodoBloque(l);
-            free(*l);
         } else if (strcmp(argPpal, "hist") == 0) {
             if (argumentos[0] == NULL)
                 imprimirHistorial(*h);

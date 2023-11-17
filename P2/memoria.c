@@ -12,7 +12,7 @@ memfill fills the memory with one character
 mem shows information on the memory of the process
 recurse executes a recursive function*/
 
-void pecharTodoBloque(listaBloques *l){
+/*void pecharTodoBloque(listaBloques *l){
     listaBloques tAux;
     void *df;
 
@@ -28,8 +28,24 @@ void pecharTodoBloque(listaBloques *l){
             memAlloc(l,args);
 
         }
+}*/
+void liberarBloqueMemoria(listaBloques bloque) {
+    free(bloque->direccion);
+    // Otros pasos de liberación si es necesario
+    free(bloque);
 }
 
+
+void pecharTodoBloque(listaBloques *lista) {
+     bloquesMemoria *actual = *lista;
+    bloquesMemoria *siguiente=actual;
+
+    while (actual != NULL) {
+        siguiente = (bloquesMemoria *) actual->next;
+        liberarBloqueMemoria(actual);
+        actual = siguiente;
+    }
+}
 void crearTaboaBloques(listaBloques *lista){
     *lista=NULL;
 }
@@ -127,7 +143,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
 
                 // Imprimir y liberar memoria
                 printf("Bloque liberado: 0x%x\n", l->direccion);
-                free(l);
+                liberarBloqueMemoria(l);
 
                 return;
             } else {
