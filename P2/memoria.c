@@ -1,5 +1,12 @@
 #include <time.h>
 #include "memoria.h"
+#include "ficheiros.h"
+
+#include <sys/ipc.h>
+
+#include <sys/shm.h>
+
+
 
 /*malloc allocates (or deallocates) a block malloc memory. Updates the list of memory blocks
 shared allocates (or deallocates) a block shared memory. Updates the list of memory blocks
@@ -73,8 +80,6 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
         }
     }
 }
-
-
 
 
 
@@ -215,8 +220,8 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
 
         if (A == NULL) {
         }
-        insertarElemento(lista, A, n, "malloc");
-        printf("Se ha asignado memoria correspondiente a %d bytes en 0x%x\n", n, A);
+        insertarElemento(lista, A, n, "malloc", 0);
+        printf("Se ha asignado memoria correspondiente a %d bytes en %p\n", n, A);
     } else {
         if (argumentos[1] == NULL) {
             printf("Error: Debe proporcionar el tamaño a liberar.\n");
@@ -256,7 +261,6 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
         printf("Non hai bloque dese tamano asignado con malloc\n");
     }
 }
-
 void intRecurse (int n) {
     char automatico[TAMANO];
     static char estatico[TAMANO];
@@ -275,4 +279,99 @@ void recurse (char* argumentos[MAXARGS]){
     if(*strAux!=argumentos[0] && argumentos[0][0]!=0)
         intRecurse(n);
     //free(strAux[0]);
+}
+
+ssize_t LeerFichero (char *f, void *p, size_t cont)
+{
+    struct stat s;
+    ssize_t  n;
+    int df,aux;
+
+    if (stat (f,&s)==-1 || (df=open(f,O_RDONLY))==-1)
+        return -1;
+    if (cont==-1)   /* si pasamos -1 como bytes a leer lo leemos entero*/
+        cont=s.st_size;
+    if ((n=read(df,p,cont))==-1){
+        aux=errno;
+        close(df);
+        errno=aux;
+        return -1;
+    }
+    close (df);
+    return n;
+}
+
+void *cadtop(char *cad){
+    return (void *) strtol(cad, NULL, 16);
+}
+
+void CmdRead (char *ar[]){ // comprobar se furrula ben
+    void *p;
+    size_t cont=-1;  /* -1 indica leer todo el fichero*/
+    ssize_t n;
+    if (ar[0]==NULL || ar[1]==NULL){
+        printf ("faltan parametros\n");
+        return;
+    }
+    p=cadtop(ar[1]);  /*convertimos de cadena a puntero*/
+    if (ar[2]!=NULL)
+        cont=(size_t) atoll(ar[2]);
+
+    if ((n=LeerFichero(ar[0],p,cont))==-1)
+        perror ("Imposible leer fichero");
+    else
+        printf ("leidos %lld bytes de %s en %p\n",(long long) n,ar[0],p);
+}
+
+
+void LlenarMemoria (void *p, size_t cont, unsigned char byte){
+    unsigned char *arr=(unsigned char *) p;
+    size_t i;
+
+    for (i=0; i<cont;i++)
+        arr[i]=byte;
+}
+void memfill(char *argumentos[]){ // comprobar se furrula ben
+    if(argumentos[2] != NULL && argumentos[3] == NULL)
+        LlenarMemoria(cadtop(argumentos[0]),
+                      strtol(argumentos[1],NULL,10),
+                      argumentos[2][0]);
+    else
+        perror("Numero de argumentos non valido");
+}
+
+void mem(listaBloques l){ //comprobar se furrula
+    MostrarListaMemoria(l,2);
+}
+
+
+
+ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
+{
+    ssize_t  n;
+    int df,aux, flags=O_CREAT | O_EXCL | O_WRONLY;
+
+    if (overwrite)
+        flags=O_CREAT | O_WRONLY | O_TRUNC;
+
+    if ((df=open(f,flags,0777))==-1)
+        return -1;
+
+    if ((n=write(df,p,cont))==-1){
+        aux=errno;
+        close(df);
+        errno=aux;
+        return -1;
+    }
+    close (df);
+    return n;
+}
+
+void CmdWrite(char *ar[]){ //falta probalo
+    if(ar[3]==NULL && ar[2]!=NULL)
+        EscribirFichero(ar[0], cadtop(ar[1]),strtol(ar[2],NULL,10),0);
+    else if(strcmp(ar[0],"-o")==0 && ar[3]!=NULL &&ar[4]==NULL)
+        EscribirFichero(ar[1], cadtop(ar[2]),strtol(ar[3],NULL,10),1);
+    else
+        perror("Argumentos invalidos");
 }

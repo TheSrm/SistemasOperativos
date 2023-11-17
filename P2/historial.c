@@ -36,7 +36,7 @@ void borrarHist(historial* h){
 void imprimirHistorial(historial h){
     int cmdCnt=0;
     for(; h != HISTNULL; h=h->nextCmd, cmdCnt++)
-        printf("Comando %d: %s\n",cmdCnt,h->comando);
+        printf("Comando %d: %s",cmdCnt,h->comando);
 }
 
 int intPotencia(int base, int exp){

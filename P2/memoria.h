@@ -26,10 +26,11 @@ void pecharTodoBloque(listaBloques *l);
 void memAlloc( listaBloques *l, char *argumentos[MAXARGS]);
 void shared(int size, listaBloques l);
 void mmap(char* rutaFich, listaBloques l);
-void readFile(char* rutaFich, listaBloques l);
+void CmdRead(char* ar[]);
+void CmdWrite(char* ar[]);
 void memdump(listaBloques l);
-void memfill(listaBloques l);
-void mem();
+void memfill(char* argumentos[MAXARGS]);
+void mem(listaBloques l);
 void recurse(char* argumentos[MAXARGS]);
 
 
