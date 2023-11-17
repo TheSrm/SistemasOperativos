@@ -24,7 +24,7 @@ void crearTaboaBloques(listaBloques *l);
 
 void pecharTodoBloque(listaBloques *l);
 void memAlloc( listaBloques *l, char *argumentos[MAXARGS]);
-void shared(int size, listaBloques l);
+void sharedMemory(char *argumentos[MAXARGS], listaBloques *l);
 void mmap(char* rutaFich, listaBloques l);
 void CmdRead(char* ar[]);
 void CmdWrite(char* ar[]);

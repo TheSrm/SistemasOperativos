@@ -44,9 +44,10 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
     if (Mode==0) {
         for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
             if (strcmp(l->tipoAsignacion, "malloc") == 0) {
-                printf("%p \t %d/%d %02d:%02d  %lu %s\n",
+                printf("%p \t %d/%d/%d %02d:%02d  %lu %s\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
-                       localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_mon,localtime(&l->dataCreacion)->tm_year+1900,
+                       localtime(&l->dataCreacion)->tm_hour,
                        localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion);
             }
         }
@@ -55,9 +56,9 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
     if (Mode==1) {
         for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
             if (strcmp(l->tipoAsignacion, "shared") == 0) {
-                printf("%p \t %d/%d/ %02d:%02d  %lu %s ( key %d)\n",
+                printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( key %d)\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
-                       localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_mon,localtime(&l->dataCreacion)->tm_year+1900, localtime(&l->dataCreacion)->tm_hour,
                        localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion, l->key);
             }
         }
@@ -66,20 +67,22 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
     if (Mode==2) {
         for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
             if (strcmp(l->tipoAsignacion, "shared") == 0) {
-                printf("%p \t %d/%d/ %02d:%02d  %lu %s ( key %d)\n",
+                printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( key %d)\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
-                       localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_mon,localtime(&l->dataCreacion)->tm_year+1900, localtime(&l->dataCreacion)->tm_hour,
                        localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion, l->key);
             }
             if (strcmp(l->tipoAsignacion, "malloc") == 0)
-                printf("%p \t %d/%d/ %02d:%02d  %lu %s\n",
+                printf("%p \t %d/%d/%d %02d:%02d  %lu %s\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
-                       localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_mon,localtime(&l->dataCreacion)->tm_year+1900,
+                       localtime(&l->dataCreacion)->tm_hour,
                        localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion);
-
         }
+
     }
 }
+
 
 
 
@@ -122,7 +125,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
 }
 
 
-void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques L)
+void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques *L)
 {
     void * p;
     int aux,id,flags=0777;
@@ -142,7 +145,7 @@ void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques L)
         return (NULL);
     }
     shmctl (id,IPC_STAT,&s);
-    insertarElemento(&L,p,s.shm_segsz,"shared",clave);
+    insertarElemento(L,p,s.shm_segsz,"shared",clave);
     /** Guardar en la lista, p.e.  InsertarNodoShared (&L, p, s.shm_segsz, clave); */
     return (p);
 }
@@ -170,9 +173,83 @@ void SharedCreate (char *tr[],listaBloques *l){
         printf ("Imposible asignar memoria compartida clave %lu:%s\n",(unsigned long) cl,strerror(errno));
 }
 
-void sharedMem (listaBloques *lista , char *argumentos[MAXARGS]){
 
-    if (argumentos[0] == NULL) {
+void desmapearSegmento(int clave, listaBloques *lista) {
+    listaBloques actual = *lista;
+
+    // Recorrer la lista para encontrar el nodo con la clave
+    while (actual != NULL) {
+        if (actual->key == clave) {
+            // Obtener el identificador del segmento de memoria compartida
+            int shmid = shmget((key_t) actual->key, 0, 0);
+            if (shmid == -1) {
+                perror("Error al obtener el identificador del segmento de memoria compartida");
+                exit(EXIT_FAILURE);
+            }
+
+            // Desmapear el segmento de memoria compartida
+            if (shmdt(actual->direccion) == -1) {
+                perror("Error al desmapear el segmento de memoria compartida");
+                exit(EXIT_FAILURE);
+            }
+
+            printf("Segmento de memoria compartida con clave %d desmapeado con éxito.\n", actual->key);
+
+            // Puedes realizar acciones adicionales aquí si es necesario
+
+            return;  // Salir del bucle después de desmapear el segmento
+        }
+
+        actual = actual->next;
+    }
+
+    printf("Clave %d no encontrada en la lista.\n", clave);
+}
+
+void eliminarClave(int clave, listaBloques *lista) {
+    listaBloques actual = *lista;
+    listaBloques anterior = NULL;
+
+    while (actual != NULL) {
+        if (actual->key == clave) {
+            // Obtener el identificador del segmento de memoria compartida
+            int shmid = shmget((key_t)actual->key, 0, 0);
+            if (shmid == -1) {
+                perror("Error al obtener el identificador del segmento de memoria compartida");
+                exit(EXIT_FAILURE);
+            }
+
+            // Eliminar la clave de memoria compartida del sistema
+            if (shmctl(shmid, IPC_RMID, 0) == -1) {
+                perror("Error al eliminar la clave de memoria compartida del sistema");
+                exit(EXIT_FAILURE);
+            }
+
+            printf("Clave de memoria compartida %d eliminada del sistema.\n", actual->key);
+
+            // Eliminar el nodo de la lista
+            if (anterior == NULL) {
+                *lista = actual->next;
+            } else {
+                anterior->next = actual->next;
+            }
+
+            free(actual);
+            return;
+        }
+
+        anterior = actual;
+        actual = actual->next;
+    }
+
+    printf("Clave %d no encontrada en la lista.\n", clave);
+}
+
+
+void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
+    key_t cl;
+    char* key = argumentos[1];
+    if (argumentos[0] ==NULL) {
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
@@ -182,15 +259,33 @@ void sharedMem (listaBloques *lista , char *argumentos[MAXARGS]){
         }
         return;
     }
-
     if (strcmp(argumentos[0],"-create")==0){
         SharedCreate(argumentos,lista);
-    } else if (strcmp(argumentos[0],"-")==0){
+        return;
+    } else {
+        if (strcmp(argumentos[0], "-free") == 0) {
+            if (argumentos[1] != NULL) {
 
-    }
+                cl = (key_t) strtoul(argumentos[1], NULL, 10);
+                eliminarClave(cl, lista);
+            } else printf("No se ha introducido una clave para desmapear");
+            return;
 
+        } else {
 
+            if (strcmp(argumentos[0], "-delkey") == 0) {
+                if (argumentos[1] != NULL) {
+                    cl = (key_t) strtoul(argumentos[1], NULL, 10);
+                    desmapearSegmento(cl, lista);
+                } else printf("No se ha introducido una clave para eliminar");
+
+                return;
+            }
+            }
+        }
+    printf("No se ha inyroducido una opcion valida, consulta la ayuda con help shared\n");
 }
+
 
 void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
     if (argumentos[0] == NULL) {

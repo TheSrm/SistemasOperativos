@@ -106,11 +106,11 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             mem(*l);
         else if (strcmp(argPpal,"write")==0)
             CmdWrite(argumentos);
-        /*else if (strcmp(argPpal,"shared")==0)
-            shared(999,*l); // 999 provisional
+        else if (strcmp(argPpal,"shared")==0)
+            sharedMemory(argumentos, l);
         else if (strcmp(argPpal,"mmap")==0)
             mmap(argumentos[0],*l);
-        else if (strcmp(argPpal,"read")==0)
+        /*else if (strcmp(argPpal,"read")==0)
             readFile(argumentos[0],*l);
         //
         else if (strcmp(argPpal,"memdump")==0)
