@@ -12,14 +12,15 @@ int main(){
     char* entrada = malloc(256);
     historial h = crearHistBaleiro();
     taboaFicheiros t;
-    listaBloques l = crearTaboaBloques();
+    listaBloques l;
 
     crearTaboaFich(&t);
+    crearTaboaBloques(&l);
 
     while (!rematado){
         imprPrompt();
         lerEntrada(entrada, &h);
-        procesarEntrada(entrada, &h, &rematado, &t,l);
+        procesarEntrada(entrada, &h, &rematado, &t,&l);
     }
     return 0;
 }

@@ -12,7 +12,7 @@ void lerEntrada(char *entrada, historial* h) {
         printf("Erro ao insertar o comando no historial");//Indicamos o erro e seguimos
 }
 //Repetimos un comando cuxa posición na lista sexa a indicada
-void repetirComando(char **argumentos, historial *h, taboaFicheiros *t, listaBloques l){
+void repetirComando(char **argumentos, historial *h, taboaFicheiros *t, listaBloques *l){
     int repe = atoi(argumentos[0]), i;//Inicializamos variables para comprobar funcionamento correcto
     historial hAux; // hAux: copia estática do historial actual
 
@@ -33,7 +33,7 @@ void repetirComando(char **argumentos, historial *h, taboaFicheiros *t, listaBlo
 }
 
 //Troceamos o comando en argPpal, donde se garda o comando e argumentos[], donde gardaremos os argumentos de cada comando
-void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques l) {
+void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques *l) {
     int i;//Creamos as variables necesarias para o correcto funcionamento da función
     char *argPpal, *argumentos[MAXARGS];
 
@@ -60,6 +60,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             free(*h);
             pecharTodoFicheiro(t);
             free(*t);
+            pecharTodoBloque(l);
+            free(*l);
         } else if (strcmp(argPpal, "hist") == 0) {
             if (argumentos[0] == NULL)
                 imprimirHistorial(*h);

@@ -11,15 +11,15 @@ typedef struct bloquesMemoria{
     time_t dataCreacion;
     double tamanoBloque;
     char* tipoAsignacion;
-    struct bloquesMemoria *next;
+    struct bloqueMemoria *next;
 }bloquesMemoria;
 
 typedef bloquesMemoria *listaBloques;
 
-listaBloques crearTaboaBloques();
+void crearTaboaBloques(listaBloques *l);
 
-
-void memAlloc( listaBloques l, char *argumentos[MAXARGS]);
+void pecharTodoBloque(listaBloques *l);
+void memAlloc( listaBloques *l, char *argumentos[MAXARGS]);
 void shared(int size, listaBloques l);
 void mmap(char* rutaFich, listaBloques l);
 void readFile(char* rutaFich, listaBloques l);
