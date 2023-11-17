@@ -6,12 +6,16 @@
 
 #define TAMANO 2048
 
+typedef u_long tam_t;
+typedef int key_t;
+
 typedef struct bloquesMemoria{
     void *direccion;
     time_t dataCreacion;
-    double tamanoBloque;
+    tam_t tamanoBloque;
     char* tipoAsignacion;
     struct bloqueMemoria *next;
+    int key;
 }bloquesMemoria;
 
 typedef bloquesMemoria *listaBloques;
