@@ -93,7 +93,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
 
     if (nuevoBloque == NULL) {
         fprintf(stderr, "Error: No se pudo asignar memoria para el nuevo bloque.\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     // Configurar los valores del nuevo bloque
@@ -111,6 +111,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
             printf("Non asignamos bloques de clave 0 ");
         } else nuevoBloque->key = key;
     }
+
         bloquesMemoria *temp = *lista;
         // Si la lista está vacía, insertar al principio
         if (*lista == NULL) {
@@ -195,14 +196,13 @@ void desmapearSegmento(int clave, listaBloques *lista) {
 
             printf("Segmento de memoria compartida con clave %d desmapeado con éxito.\n", actual->key);
 
-            // Puedes realizar acciones adicionales aquí si es necesario
 
             return;  // Salir del bucle después de desmapear el segmento
         }
 
         actual = actual->next;
     }
-
+//Si no salí en el bucle anterior, no encontré la clave
     printf("Clave %d no encontrada en la lista.\n", clave);
 }
 
@@ -293,9 +293,9 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
             printf("Lista de bloques asignados para o proceso %d\n", getpid());
-            for (bloquesMemoria *l = *lista; l != NULL; l = (bloquesMemoria *) l->next) {
-                MostrarListaMemoria(*lista,0);
-            }
+                MostrarListaMemoria(*lista, 0);
+
+
         }
         return;
     }
@@ -314,7 +314,9 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
         void *A = malloc(n);
 
         if (A == NULL) {
+            printf("No se ha podido realizar la reserva de memoria");
         }
+
         insertarElemento(lista, A, n, "malloc", 0);
         printf("Se ha asignado memoria correspondiente a %d bytes en %p\n", n, A);
     } else {
