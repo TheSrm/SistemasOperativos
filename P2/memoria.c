@@ -1,6 +1,8 @@
 #include <time.h>
 #include "memoria.h"
 #include "ficheiros.h"
+#include "sys/mman.h"
+
 
 #include <sys/ipc.h>
 
@@ -54,6 +56,17 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
 
     if (Mode==2) {
         for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
+            if (strcmp(l->tipoAsignacion, "file") == 0) {
+                printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( descriptor %d)\n",
+                       l->direccion, localtime(&l->dataCreacion)->tm_mday,
+                       localtime(&l->dataCreacion)->tm_mon,localtime(&l->dataCreacion)->tm_year+1900, localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion, l->key);
+            }
+        }
+    }
+
+    if (Mode==3) {
+        for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
             if (strcmp(l->tipoAsignacion, "shared") == 0) {
                 printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( key %d)\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
@@ -78,6 +91,7 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
 void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, const char *tipoAsignacion, key_t key) {
     // Crear un nuevo bloque de memoria
     bloquesMemoria *nuevoBloque = (bloquesMemoria *) malloc(sizeof(bloquesMemoria));
+    int n=2;
 
     if (nuevoBloque == NULL) {
         fprintf(stderr, "Error: No se pudo asignar memoria para el nuevo bloque.\n");
@@ -88,27 +102,42 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
     nuevoBloque->direccion = direccion;
     nuevoBloque->dataCreacion = time(NULL);
     nuevoBloque->tamanoBloque = tamanoBloque;
-    nuevoBloque->tipoAsignacion = tipoAsignacion;
+    nuevoBloque->tipoAsignacion=tipoAsignacion;
+
 
     nuevoBloque->next = NULL;
 
     if (strcmp(tipoAsignacion, "malloc") == 0) {
         nuevoBloque->key = 0;
-    } else {
-        if (key == 0) {
-            printf("Non asignamos bloques de clave 0 ");
+    }
+    else {
+        if (strcmp(tipoAsignacion, "file") == 0){
+
+            if (*lista == NULL) {
+                nuevoBloque->key=n;
+            } else{
+                bloquesMemoria *temp = *lista;
+                for (; temp->next != NULL; temp = (bloquesMemoria *) temp->next) {
+                    n++;
+                }
+                nuevoBloque->key=n;
+
+            }
+
+        } else if (key == 0) {
+             printf("Non asignamos bloques de clave 0 ");
         } else nuevoBloque->key = key;
     }
 
-        bloquesMemoria *temp = *lista;
+        bloquesMemoria *temp2 = *lista;
         // Si la lista está vacía, insertar al principio
         if (*lista == NULL) {
             *lista = nuevoBloque;
         } else {
             // Encontrar el final de la lista
-            for (; temp->next != NULL; temp = temp->next);
+            for (; temp2->next != NULL; temp2 = (bloquesMemoria *) temp2->next);
             // Enlazar el nuevo bloque al final de la lista
-            temp->next = nuevoBloque;
+            temp2->next = (struct bloqueMemoria *) nuevoBloque;
         }
 
 }
@@ -146,7 +175,7 @@ void SharedCreate (char *tr[],listaBloques *l){
     void *p;
 
     if (tr[1]==NULL || tr[2]==NULL) {
-        MostrarListaMemoria(l,1);
+        MostrarListaMemoria(*l,1);
         return;
     }
 
@@ -161,6 +190,51 @@ void SharedCreate (char *tr[],listaBloques *l){
     else
         printf ("Imposible asignar memoria compartida clave %lu:%s\n",(unsigned long) cl,strerror(errno));
 }
+
+
+void * MapearFichero (char * fichero, int protection, listaBloques *L)
+{
+    int df, map=MAP_PRIVATE,modo=O_RDONLY;
+    struct stat s;
+    void *p;
+
+    if (protection&PROT_WRITE)
+        modo=O_RDWR;
+    if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
+        return NULL;
+    if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
+        return NULL;
+    insertarElemento(L,p,s.st_size,"shared",0);
+/* Guardar en la lista    InsertarNodoMmap (&L,p, s.st_size,df,fichero); */
+    return p;
+}
+
+void do_AllocateMmap(char *arg[],listaBloques *L)
+{
+    char *perm;
+    void *p;
+    int protection=0;
+
+    if ((perm=arg[1])!=NULL && strlen(perm)<4) {
+        if (strchr(perm,'r')!=NULL) protection|=PROT_READ;
+        if (strchr(perm,'w')!=NULL) protection|=PROT_WRITE;
+        if (strchr(perm,'x')!=NULL) protection|=PROT_EXEC;
+    }
+    if ((p=MapearFichero(arg[0],protection,L))==NULL)
+        perror ("Imposible mapear fichero");
+    else
+        printf ("fichero %s mapeado en %p\n", arg[0], p);
+}
+
+/*void Memorýmap (char *argumentos[MAXARGS], listaBloques l){
+    if (argumentos[0]==NULL){
+        MostrarListaMemoria(l,3);
+    }
+    if (strcmp(argumentos[0],"-free")!=0){
+        do_AllocateMmap(argumentos,)
+
+    }
+}*/
 
 
 void desmapearSegmento(int clave, listaBloques *lista) {
@@ -188,7 +262,7 @@ void desmapearSegmento(int clave, listaBloques *lista) {
             return;  // Salir del bucle después de desmapear el segmento
         }
 
-        actual = actual->next;
+        actual = (listaBloques) actual->next;
     }
 //Si no salí en el bucle anterior, no encontré la clave
     printf("Clave %d no encontrada en la lista.\n", clave);
@@ -216,7 +290,7 @@ void eliminarClave(int clave, listaBloques *lista) {
 
             // Eliminar el nodo de la lista
             if (anterior == NULL) {
-                *lista = actual->next;
+                *lista = (listaBloques) actual->next;
             } else {
                 anterior->next = actual->next;
             }
@@ -226,7 +300,7 @@ void eliminarClave(int clave, listaBloques *lista) {
         }
 
         anterior = actual;
-        actual = actual->next;
+        actual = (listaBloques) actual->next;
     }
 
     printf("Clave %d no encontrada en la lista.\n", clave);
@@ -344,7 +418,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
             if (l->tamanoBloque == n) {
                 // Eliminar el bloque encontrado
                 if (anterior == NULL) {
-                    *lista = l->next;
+                    *lista = (listaBloques) l->next;
                 } else {
                     anterior->next = l->next;
                 }
@@ -356,7 +430,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
                 return;
             } else {
                 anterior = l;
-                l = l->next;
+                l = (bloquesMemoria *) l->next;
             }
         }
 
