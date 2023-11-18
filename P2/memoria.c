@@ -19,23 +19,11 @@ mem shows information on the memory of the process
 recurse executes a recursive function*/
 
 
-void liberarBloqueMemoria(listaBloques bloque) {
+void liberarBloqueMemoriaMalloc(listaBloques bloque) {
     free(bloque->direccion);
-    // Otros pasos de liberación si es necesario
     free(bloque);
 }
 
-
-void pecharTodoBloque(listaBloques *lista) {
-     bloquesMemoria *actual = *lista;
-    bloquesMemoria *siguiente;
-
-    while (actual != NULL) {
-        siguiente = (bloquesMemoria *) actual->next;
-        liberarBloqueMemoria(actual);
-        actual = siguiente;
-    }
-}
 void crearTaboaBloques(listaBloques *lista){
     *lista=NULL;
 }
@@ -225,7 +213,6 @@ void eliminarClave(int clave, listaBloques *lista) {
                 exit(EXIT_FAILURE);
             }
 
-            printf("Clave de memoria compartida %d eliminada del sistema.\n", actual->key);
 
             // Eliminar el nodo de la lista
             if (anterior == NULL) {
@@ -243,6 +230,24 @@ void eliminarClave(int clave, listaBloques *lista) {
     }
 
     printf("Clave %d no encontrada en la lista.\n", clave);
+}
+
+
+
+void pecharTodoBloque(listaBloques *lista) {
+    bloquesMemoria *actual = *lista;
+    bloquesMemoria *siguiente;
+
+    while (actual != NULL) {
+        siguiente = (bloquesMemoria *) actual->next;
+        if (strcmp(actual->tipoAsignacion, "malloc") == 0)
+            liberarBloqueMemoriaMalloc(actual);
+        else if (strcmp(actual->tipoAsignacion, "shared") == 0) {
+            eliminarClave(actual->key, lista);
+        }
+
+        actual = siguiente;
+    }
 }
 
 
@@ -346,7 +351,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
 
                 // Imprimir y liberar memoria
                 printf("Bloque liberado: %p\n", l->direccion);
-                liberarBloqueMemoria(l);
+                liberarBloqueMemoriaMalloc(l);
 
                 return;
             } else {
