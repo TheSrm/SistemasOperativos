@@ -12,6 +12,7 @@ typedef int key_t;
 typedef struct bloquesMemoria{
     void *direccion;
     time_t dataCreacion;
+    char* nombreDocumento;
     tam_t tamanoBloque;
     char* tipoAsignacion;
     struct bloqueMemoria *next;
@@ -25,7 +26,7 @@ void crearTaboaBloques(listaBloques *l);
 void pecharTodoBloque(listaBloques *l);
 void memAlloc( listaBloques *l, char *argumentos[MAXARGS]);
 void sharedMemory(char *argumentos[MAXARGS], listaBloques *l);
-void Memorymap(char* argumentos[MAXARGS], listaBloques *l);
+void MemoryMap(char* argumentos[MAXARGS], listaBloques *l);
 void CmdRead(char* ar[]);
 void CmdWrite(char* ar[]);
 void memdump(listaBloques l);

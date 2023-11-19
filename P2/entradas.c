@@ -1,6 +1,6 @@
 #include "entradas.h"
 
-//Función encargada de cerrar a shell, cando o usuario o indique, cambiando o valor de rematado
+//Función encargada de error a shell, cando o usuario o indique, cambiando o valor de rematado
 void shutDown (bool* rematado){
     *rematado = true;
 }
@@ -95,21 +95,21 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
         else if (strcmp(argPpal, "stat") == 0)
             stats(argumentos);
         else if (strcmp(argPpal,"malloc")==0)
-            memAlloc(l,argumentos);
+            memAlloc(l,argumentos);//Probado, sen memory leaks
         else if (strcmp(argPpal,"recurse")==0)
-            recurse(argumentos);
+            recurse(argumentos);//Probado, sen memory leaks
         else if (strcmp(argPpal,"read")==0)
-            CmdRead(argumentos);
+            CmdRead(argumentos);//Probar
         else if (strcmp(argPpal,"memfill")==0)
-            memfill(argumentos);
+            memfill(argumentos);//Probar
         else if (strcmp(argPpal,"mem")==0)
-            mem(*l);
+            mem(*l);//Probar
         else if (strcmp(argPpal,"write")==0)
-            CmdWrite(argumentos);
+            CmdWrite(argumentos);//Probar
         else if (strcmp(argPpal,"shared")==0)
-            sharedMemory(argumentos, l);
+            sharedMemory(argumentos, l);//Probado, sen memory leaks
         else if (strcmp(argPpal,"mmap")==0)
-            mmap(argumentos[0],*l);
+            MemoryMap(argumentos,l);
         /*else if (strcmp(argPpal,"read")==0)
             readFile(argumentos[0],*l);
         //

@@ -9,7 +9,6 @@
 #include <sys/shm.h>
 
 
-
 /*malloc allocates (or deallocates) a block malloc memory. Updates the list of memory blocks
 shared allocates (or deallocates) a block shared memory. Updates the list of memory blocks
 mmap maps (or unmaps) a file in memory. Updates the list of memory blocks
@@ -22,7 +21,14 @@ recurse executes a recursive function*/
 
 
 void liberarBloqueMemoriaMalloc(listaBloques bloque) {
-    free(bloque->direccion);
+    // Asegúrate de que el bloque no sea NULL
+
+    if (munmap(bloque->direccion, bloque->tamanoBloque) == -1) {
+        perror("Error al desmapear el archivo");
+    }
+
+    free(bloque->nombreDocumento);
+    free(bloque->tipoAsignacion);
     free(bloque);
 }
 
@@ -31,6 +37,12 @@ void crearTaboaBloques(listaBloques *lista){
 }
 
 void MostrarListaMemoria(listaBloques lista,int Mode){
+
+    if (lista==NULL){
+        printf("No se han asignado memoria en el proceso en cuestion\n");
+        return;
+    } else{
+        printf("Lista de bloques asignados para el proceso %d\n",getpid());
     if (Mode==0) {
         for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
             if (strcmp(l->tipoAsignacion, "malloc") == 0) {
@@ -60,7 +72,7 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
                 printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( descriptor %d)\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
                        localtime(&l->dataCreacion)->tm_mon,localtime(&l->dataCreacion)->tm_year+1900, localtime(&l->dataCreacion)->tm_hour,
-                       localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion, l->key);
+                       localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->nombreDocumento, l->key);
             }
         }
     }
@@ -70,28 +82,35 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
             if (strcmp(l->tipoAsignacion, "shared") == 0) {
                 printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( key %d)\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
-                       localtime(&l->dataCreacion)->tm_mon,localtime(&l->dataCreacion)->tm_year+1900, localtime(&l->dataCreacion)->tm_hour,
-                       localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion, l->key);
+                       localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_year + 1900,
+                       localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->nombreDocumento, l->key);
             }
             if (strcmp(l->tipoAsignacion, "malloc") == 0)
                 printf("%p \t %d/%d/%d %02d:%02d  %lu %s\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
-                       localtime(&l->dataCreacion)->tm_mon,localtime(&l->dataCreacion)->tm_year+1900,
+                       localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_year + 1900,
                        localtime(&l->dataCreacion)->tm_hour,
                        localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion);
-        }
 
+
+            if (strcmp(l->tipoAsignacion, "shared") == 0) {
+                printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( key %d)\n",
+                       l->direccion, localtime(&l->dataCreacion)->tm_mday,
+                       localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_year + 1900,
+                       localtime(&l->dataCreacion)->tm_hour,
+                       localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->tipoAsignacion, l->key);
+            }
+        }
+    }
     }
 }
 
 
-
-
-
-void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, const char *tipoAsignacion, key_t key) {
+void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, const char *tipoAsignacion, key_t key, char* nombre) {
     // Crear un nuevo bloque de memoria
     bloquesMemoria *nuevoBloque = (bloquesMemoria *) malloc(sizeof(bloquesMemoria));
-    int n=2;
+
 
     if (nuevoBloque == NULL) {
         fprintf(stderr, "Error: No se pudo asignar memoria para el nuevo bloque.\n");
@@ -102,32 +121,26 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
     nuevoBloque->direccion = direccion;
     nuevoBloque->dataCreacion = time(NULL);
     nuevoBloque->tamanoBloque = tamanoBloque;
-    nuevoBloque->tipoAsignacion=tipoAsignacion;
+    nuevoBloque->tipoAsignacion = tipoAsignacion;
+    nuevoBloque->nombreDocumento=NULL;
+    nuevoBloque->nombreDocumento = strdup(nombre);
 
 
     nuevoBloque->next = NULL;
 
-    if (strcmp(tipoAsignacion, "malloc") == 0) {
-        nuevoBloque->key = 0;
-    }
-    else {
-        if (strcmp(tipoAsignacion, "file") == 0){
+    if (strcmp(tipoAsignacion,"shared")!=0) {
+        nuevoBloque->key = key;
 
-            if (*lista == NULL) {
-                nuevoBloque->key=n;
-            } else{
-                bloquesMemoria *temp = *lista;
-                for (; temp->next != NULL; temp = (bloquesMemoria *) temp->next) {
-                    n++;
-                }
-                nuevoBloque->key=n;
 
-            }
+    }else if ( key == 0) {
+            printf("Non asignamos bloques de clave 0 ");
+            return;
+        }
 
-        } else if (key == 0) {
-             printf("Non asignamos bloques de clave 0 ");
-        } else nuevoBloque->key = key;
-    }
+        if (strcmp(tipoAsignacion,"shared")==0){
+            nuevoBloque->key = key;
+            nuevoBloque->nombreDocumento = "shared";
+        }
 
         bloquesMemoria *temp2 = *lista;
         // Si la lista está vacía, insertar al principio
@@ -141,6 +154,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
         }
 
 }
+
 
 
 void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques *L)
@@ -163,7 +177,7 @@ void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques *L)
         return (NULL);
     }
     shmctl (id,IPC_STAT,&s);
-    insertarElemento(L,p,s.shm_segsz,"shared",clave);
+    insertarElemento(L,p,s.shm_segsz,"shared",clave,"shared");
     /** Guardar en la lista, p.e.  InsertarNodoShared (&L, p, s.shm_segsz, clave); */
     return (p);
 }
@@ -192,7 +206,63 @@ void SharedCreate (char *tr[],listaBloques *l){
 }
 
 
-void * MapearFichero (char * fichero, int protection, listaBloques *L)
+void do_AllocateCreateshared (char *tr[],listaBloques *L)
+{
+    key_t cl;
+    size_t tam;
+    void *p;
+
+    if (tr[0]==NULL || tr[1]==NULL) {
+        MostrarListaMemoria(*L,2);
+        return;
+    }
+
+
+    cl=(key_t)  strtoul(tr[0],NULL,10);
+    tam=(size_t) strtoul(tr[1],NULL,10);
+    if (tam==0) {
+        printf ("No se asignan bloques de 0 bytes\n");
+        return;
+    }
+    if ((p=ObtenerMemoriaShmget(cl,tam,L))!=NULL)
+        printf ("Asignados %lu bytes en %p\n",(unsigned long) tam, p);
+    else
+        printf ("Imposible asignar memoria compartida clave %lu:%s\n",(unsigned long) cl,strerror(errno));
+}
+
+void cerrarYEliminarArchivo(int key, listaBloques *lista) {
+    bloquesMemoria *actual = *lista;
+    bloquesMemoria *anterior = NULL;
+
+    // Buscar el nodo con el descriptor de archivo key
+    while (actual != NULL && actual->key != key) {
+        anterior = actual;
+        actual = actual->next;
+    }
+
+    if (actual == NULL) {
+        fprintf(stderr, "No se encontró el archivo en la lista.\n");
+        return;
+    }
+
+    // Cerrar el archivo
+    if (close(actual->key) == -1) {
+        perror("Error al cerrar el archivo");
+        return;
+    }
+
+    // Eliminar el nodo de la lista
+    if (anterior == NULL) {
+        *lista = actual->next;
+    } else {
+        anterior->next = actual->next;
+    }
+    free(actual->nombreDocumento);
+    free(actual);
+
+}
+
+void * MapearFichero (char * fichero, int protection, listaBloques *l)
 {
     int df, map=MAP_PRIVATE,modo=O_RDONLY;
     struct stat s;
@@ -204,16 +274,22 @@ void * MapearFichero (char * fichero, int protection, listaBloques *L)
         return NULL;
     if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
         return NULL;
-    insertarElemento(L,p,s.st_size,"shared",0);
-/* Guardar en la lista    InsertarNodoMmap (&L,p, s.st_size,df,fichero); */
+    insertarElemento(l,p,s.st_size,"file",df,fichero);
     return p;
 }
+
+
 
 void do_AllocateMmap(char *arg[],listaBloques *L)
 {
     char *perm;
     void *p;
     int protection=0;
+
+    if (arg[0]==NULL){
+        MostrarListaMemoria(*L,2);
+        return;
+    }
 
     if ((perm=arg[1])!=NULL && strlen(perm)<4) {
         if (strchr(perm,'r')!=NULL) protection|=PROT_READ;
@@ -226,15 +302,33 @@ void do_AllocateMmap(char *arg[],listaBloques *L)
         printf ("fichero %s mapeado en %p\n", arg[0], p);
 }
 
-/*void Memorýmap (char *argumentos[MAXARGS], listaBloques l){
-    if (argumentos[0]==NULL){
-        MostrarListaMemoria(l,3);
+void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
+    if (argumentos[0]==NULL || strcmp(argumentos[0],"-free")!=0){
+        do_AllocateMmap(argumentos,l);
+        return;
     }
-    if (strcmp(argumentos[0],"-free")!=0){
-        do_AllocateMmap(argumentos,)
+    if (strcmp(argumentos[0],"-free")==0){
+        bloquesMemoria *L;
+        for ( L = *l; l != NULL; L = (bloquesMemoria *) L->next) {
+            if (strcmp(L->nombreDocumento,argumentos[1])==0)
+                break;
+        }
+        if (L==NULL){
+            printf("No se encuentra ese bloque en la lista");
+            return;
+        }
+        else
+            cerrarYEliminarArchivo(L->key,l);
+        return;
+    }
+    printf("No has introducido una opción válida, usa help mmap para ver las opciones disponibles.\n");
 
-    }
-}*/
+
+        return;
+}
+
+
+
 
 
 void desmapearSegmento(int clave, listaBloques *lista) {
@@ -308,6 +402,7 @@ void eliminarClave(int clave, listaBloques *lista) {
 
 
 
+
 void pecharTodoBloque(listaBloques *lista) {
     bloquesMemoria *actual = *lista;
     bloquesMemoria *siguiente;
@@ -318,6 +413,8 @@ void pecharTodoBloque(listaBloques *lista) {
             liberarBloqueMemoriaMalloc(actual);
         else if (strcmp(actual->tipoAsignacion, "shared") == 0) {
             eliminarClave(actual->key, lista);
+        }else if (strcmp(actual->tipoAsignacion, "file") == 0) {
+            cerrarYEliminarArchivo(actual->key,lista);
         }
 
         actual = siguiente;
@@ -332,7 +429,7 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
-            printf("Lista de bloques asignados para o proceso %d\n", getpid());
+
             MostrarListaMemoria(*lista,1);
 
         }
@@ -351,7 +448,6 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
             return;
 
         } else {
-
             if (strcmp(argumentos[0], "-delkey") == 0) {
                 if (argumentos[1] != NULL) {
                     cl = (key_t) strtoul(argumentos[1], NULL, 10);
@@ -371,10 +467,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
-            printf("Lista de bloques asignados para o proceso %d\n", getpid());
                 MostrarListaMemoria(*lista, 0);
-
-
         }
         return;
     }
@@ -396,7 +489,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
             printf("No se ha podido realizar la reserva de memoria");
         }
 
-        insertarElemento(lista, A, n, "malloc", 0);
+        insertarElemento(lista, A, n, "malloc", 0,"malloc");
         printf("Se ha asignado memoria correspondiente a %d bytes en %p\n", n, A);
     } else {
         if (argumentos[1] == NULL) {
@@ -517,7 +610,7 @@ void memfill(char *argumentos[]){ // comprobar se furrula ben
 }
 
 void mem(listaBloques l){ //comprobar se furrula
-    MostrarListaMemoria(l,2);
+    MostrarListaMemoria(l,3);
 }
 
 

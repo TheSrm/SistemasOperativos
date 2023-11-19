@@ -41,6 +41,9 @@ void nomeDendeDireccion(char* direccion, char* nome){
     strcpy(nome,&direccion[i]);
 }
 
+
+
+
 //Funcion auxiliar para imprimir os datos dun arquivo segundo os parametros que nos dan
 void ImprimirDatos(char *argumentos[], int numDir, int numOpcions, bool HaiLong, bool HaiAcc, bool HaiLink) {
     struct stat datosArchivo;//Struct para almacenar datos de ficheiro
