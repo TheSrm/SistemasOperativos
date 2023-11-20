@@ -79,13 +79,13 @@ void MostrarListaMemoria(listaBloques lista,int Mode){
 
     if (Mode==3) {
         for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
-            if (strcmp(l->tipoAsignacion, "shared") == 0) {
+            /*if (strcmp(l->tipoAsignacion, "shared") == 0) {
                 printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( key %d)\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
                        localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_year + 1900,
                        localtime(&l->dataCreacion)->tm_hour,
                        localtime(&l->dataCreacion)->tm_min, l->tamanoBloque, l->nombreDocumento, l->key);
-            }
+            }*/ // creo que isto se fai duas veces
             if (strcmp(l->tipoAsignacion, "malloc") == 0)
                 printf("%p \t %d/%d/%d %02d:%02d  %lu %s\n",
                        l->direccion, localtime(&l->dataCreacion)->tm_mday,
@@ -154,8 +154,6 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
         }
 
 }
-
-
 
 void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques *L)
 {
@@ -278,8 +276,6 @@ void * MapearFichero (char * fichero, int protection, listaBloques *l)
     return p;
 }
 
-
-
 void do_AllocateMmap(char *arg[],listaBloques *L)
 {
     char *perm;
@@ -326,10 +322,6 @@ void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
 
         return;
 }
-
-
-
-
 
 void desmapearSegmento(int clave, listaBloques *lista) {
     listaBloques actual = *lista;
@@ -458,7 +450,7 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
             }
             }
         }
-    printf("No se ha inyroducido una opcion valida, consulta la ayuda con help shared\n");
+    printf("No se ha introducido una opcion valida, consulta la ayuda con help shared\n");
 }
 
 

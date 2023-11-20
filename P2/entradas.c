@@ -99,23 +99,19 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
         else if (strcmp(argPpal,"recurse")==0)
             recurse(argumentos);//Probado, sen memory leaks
         else if (strcmp(argPpal,"read")==0)
-            CmdRead(argumentos);//Probar
+            CmdRead(argumentos); // Funciona, probas básicas
         else if (strcmp(argPpal,"memfill")==0)
-            memfill(argumentos);//Probar
+            memfill(argumentos); // Funciona, probas básicas
         else if (strcmp(argPpal,"mem")==0)
-            mem(*l);//Probar
+            mem(*l); // Funciona, repetía shared 2 veces
         else if (strcmp(argPpal,"write")==0)
-            CmdWrite(argumentos);//Probar
+            CmdWrite(argumentos); // Funciona, probas básicas. Mirar que pasa con /0
         else if (strcmp(argPpal,"shared")==0)
             sharedMemory(argumentos, l);//Probado, sen memory leaks
         else if (strcmp(argPpal,"mmap")==0)
             MemoryMap(argumentos,l);
-        /*else if (strcmp(argPpal,"read")==0)
-            readFile(argumentos[0],*l);
-        //
-        else if (strcmp(argPpal,"memdump")==0)
-            memdump(*l);
-        */
+        //else if (strcmp(argPpal,"memdump")==0)
+            //memdump(*l);
         else
             printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
     }
