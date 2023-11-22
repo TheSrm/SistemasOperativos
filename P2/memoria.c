@@ -31,13 +31,15 @@ void crearTaboaBloques(listaBloques *lista){
     *lista=NULL;
 }
 
-void MostrarListaMemoria(listaBloques lista,int Mode) {
+void MostrarListaMemoria(listaBloques lista,int Mode , bool Rep) {
+
+    if (Rep)
+        printf("Lista de bloques asignados para el proceso %d\n", getpid());
 
     if (lista == NULL) {
-        printf("No se han asignado memoria en el proceso en cuestion\n");
         return;
-    } else {
-        printf("Lista de bloques asignados para el proceso %d\n", getpid());
+    }else {
+
         if (Mode == 0) {
             for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
                 if (strcmp(l->tipoAsignacion, "malloc") == 0) {
@@ -81,9 +83,9 @@ void MostrarListaMemoria(listaBloques lista,int Mode) {
         }
 
         if (Mode == 3) {
-            MostrarListaMemoria(lista, 0);
-            MostrarListaMemoria(lista, 1);
-            MostrarListaMemoria(lista, 2);
+            MostrarListaMemoria(lista, 0,false);
+            MostrarListaMemoria(lista, 1,false);
+            MostrarListaMemoria(lista, 2,false);
 
         }
     }
@@ -106,8 +108,9 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
     nuevoBloque->tamanoBloque = tamanoBloque;
     nuevoBloque->tipoAsignacion = tipoAsignacion;
     nuevoBloque->nombreDocumento=NULL;
+    char * Name=strdup(nombre);
     if (nombre != NULL) {
-        nuevoBloque->nombreDocumento = strdup(nombre);
+        nuevoBloque->nombreDocumento =Name ;
         if (nuevoBloque->nombreDocumento == NULL) {
             perror("Error al duplicar la cadena");
             free(nuevoBloque);
@@ -139,6 +142,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
             // Enlazar el nuevo bloque al final de la lista
             temp2->next = (struct bloqueMemoria *) nuevoBloque;
         }
+    free(Name);
 
 }
 
@@ -190,6 +194,29 @@ void SharedCreate (char *tr[],listaBloques *l){
 }
 
 
+
+void mostrarDetallesMemoria(char *argumentos[MAXARGS],listaBloques l) {
+    if (argumentos[0] == NULL) {
+        printf("No se proporcionaron opciones. Use -blocks, -funcs, -vars, -all o -pmap.\n");
+        return;
+    }
+
+    if (strcmp(argumentos[0], "-blocks") == 0) {
+        MostrarListaMemoria(l,3,true);
+    } else if (strcmp(argumentos[0], "-funcs") == 0) {
+        // Mostrar direcciones de funciones
+        // Lógica para mostrar direcciones de funciones
+    } else if (strcmp(argumentos[0], "-vars") == 0) {
+        // Mostrar direcciones de variables
+        // Lógica para mostrar direcciones de variables
+    } else if (strcmp(argumentos[0], "-all") == 0) {
+        // Mostrar todos los detalles de la memoria
+        // Lógica para mostrar todos los detalles de la memoria
+    } else if (strcmp(argumentos[0], "-pmap") == 0) {
+    } else {
+        printf("Opción no válida. Use -blocks, -funcs, -vars, -all o -pmap.\n");
+    }
+}
 void do_AllocateCreateshared (char *tr[],listaBloques *L)
 {
     key_t cl;
@@ -197,7 +224,7 @@ void do_AllocateCreateshared (char *tr[],listaBloques *L)
     void *p;
 
     if (tr[0]==NULL || tr[1]==NULL) {
-        MostrarListaMemoria(*L,2);
+        MostrarListaMemoria(*L,2,true);
         return;
     }
 
@@ -275,7 +302,7 @@ void do_AllocateMmap(char *arg[],listaBloques *L)
     int protection=0;
 
     if (arg[0]==NULL){
-        MostrarListaMemoria(*L,2);
+        MostrarListaMemoria(*L,2,true);
         return;
     }
 
@@ -432,7 +459,7 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
 
-            MostrarListaMemoria(*lista,1);
+            MostrarListaMemoria(*lista,1,true);
 
         }
         return;
@@ -469,7 +496,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
-                MostrarListaMemoria(*lista, 0);
+                MostrarListaMemoria(*lista, 0,true);
         }
         return;
     }
@@ -610,11 +637,6 @@ void memfill(char *argumentos[]){ // comprobar se furrula ben
     else
         perror("Numero de argumentos non valido");
 }
-
-void mem(listaBloques l){ //comprobar se furrula
-    MostrarListaMemoria(l,3);
-}
-
 
 
 ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
