@@ -110,8 +110,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             sharedMemory(argumentos, l);//Probado, sen memory leaks
         else if (strcmp(argPpal,"mmap")==0)
             MemoryMap(argumentos,l);
-        //else if (strcmp(argPpal,"memdump")==0)
-            //memdump(*l);
+        else if (strcmp(argPpal,"memdump")==0)
+            CmdMemdump(argumentos);
         else
             printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
     }

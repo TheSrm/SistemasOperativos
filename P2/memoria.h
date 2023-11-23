@@ -3,8 +3,14 @@
 
 #include "definicionsBase.h"
 #include "procesos.h"
+#include <sys/ipc.h>
+#include "ficheiros.h"
+#include "sys/mman.h"
+#include <sys/shm.h>
+#include <sys/wait.h>
 
 #define TAMANO 2048
+#define POR_DEFECTO 25
 
 typedef u_long tam_t;
 typedef int key_t;
@@ -29,9 +35,9 @@ void sharedMemory(char *argumentos[MAXARGS], listaBloques *l);
 void MemoryMap(char* argumentos[MAXARGS], listaBloques *l);
 void CmdRead(char* ar[]);
 void CmdWrite(char* ar[]);
-void memdump(listaBloques l);
+void CmdMemdump(char* ar[]);
 void memfill(char* argumentos[MAXARGS]);
-void mem(listaBloques l);
+void mem(char *argumentos[], listaBloques l);
 void recurse(char* argumentos[MAXARGS]);
 
 

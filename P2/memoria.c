@@ -1,13 +1,5 @@
 #include <time.h>
 #include "memoria.h"
-#include "ficheiros.h"
-#include "sys/mman.h"
-
-
-#include <sys/ipc.h>
-
-#include <sys/shm.h>
-
 
 /*malloc allocates (or deallocates) a block malloc memory. Updates the list of memory blocks
 shared allocates (or deallocates) a block shared memory. Updates the list of memory blocks
@@ -392,9 +384,6 @@ void eliminarClave(int clave, listaBloques *lista) {
     printf("Clave %d no encontrada en la lista.\n", clave);
 }
 
-
-
-
 void pecharTodoBloque(listaBloques *lista) {
     bloquesMemoria *actual = *lista;
     bloquesMemoria *siguiente;
@@ -592,7 +581,7 @@ void LlenarMemoria (void *p, size_t cont, unsigned char byte){
     for (i=0; i<cont;i++)
         arr[i]=byte;
 }
-void memfill(char *argumentos[]){ // comprobar se furrula ben
+void memfill(char *argumentos[]){
     if(argumentos[2] != NULL && argumentos[3] == NULL)
         LlenarMemoria(cadtop(argumentos[0]),
                       strtol(argumentos[1],NULL,10),
@@ -601,11 +590,60 @@ void memfill(char *argumentos[]){ // comprobar se furrula ben
         perror("Numero de argumentos non valido");
 }
 
-void mem(listaBloques l){ //comprobar se furrula
-    MostrarListaMemoria(l,3);
+void Do_MemPmap (void) /*sin argumentos*/
+{ pid_t pid;       /*hace el pmap (o equivalente) del proceso actual*/
+    char elpid[32];
+    char *argv[4]={"pmap",elpid,NULL};
+
+    sprintf (elpid,"%d", (int) getpid());
+    if ((pid=fork())==-1){
+        perror ("Imposible crear proceso");
+        return;
+    }
+    if (pid==0){ /*proceso hijo*/
+        if (execvp(argv[0],argv)==-1)
+            perror("cannot execute pmap (linux, solaris)");
+
+        argv[0]="vmmap"; argv[1]="-interleave"; argv[2]=elpid;argv[3]=NULL;
+        if (execvp(argv[0],argv)==-1) /*probamos vmmap Mac-OS*/
+            perror("cannot execute vmmap (Mac-OS)");
+
+        argv[0]="procstat"; argv[1]="vm"; argv[2]=elpid; argv[3]=NULL;
+        if (execvp(argv[0],argv)==-1)/*No hay pmap, probamos procstat FreeBSD */
+            perror("cannot execute procstat (FreeBSD)");
+
+        argv[0]="procmap",argv[1]=elpid;argv[2]=NULL;
+        if (execvp(argv[0],argv)==-1)  /*probamos procmap OpenBSD*/
+            perror("cannot execute procmap (OpenBSD)");
+
+        exit(1);
+    }
+    waitpid (pid,NULL,0);
 }
 
-
+void mem(char *argumentos[], listaBloques l){ //comprobar se furrula
+    long loc1, loc2, loc3;
+    if(argumentos[0]==NULL || strcmp(argumentos[0],"-all")==0) {
+        vars;
+        printf("Funcions programa: %p, %p, %p\n",memfill,cadtop,recurse);
+        printf("Funcions libraria: %p, %p, %p\n",printf,time,strtol);
+        MostrarListaMemoria(l, 3);
+    }else if(strcmp(argumentos[0],"-blocks")==0)
+        MostrarListaMemoria(l,3);
+    else if(strcmp(argumentos[0],"-funcs")==0){
+        printf("Funcions programa: %p, %p, %p\n",memfill,cadtop,recurse);
+        printf("Funcions libraria: %p, %p, %p\n",printf,time,strtol);
+    }
+    else if(strcmp(argumentos[0],"-vars")==0) {
+        printf("Variables locais: %p, %p, %p\n",&loc1, &loc2, &loc3);
+        printf("Variables globais: %p, %p, %p\n");
+        printf("Variables estaticas: %p, %p, %p\n");
+        printf("Variables globais non inicializadas: %p, %p, %p\n");
+        printf("Variables estaticas non inicializadas: %p, %p, %p\n");
+    }
+    else if(strcmp(argumentos[0],"-pmap")==0)
+        Do_MemPmap();
+}
 
 ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
 {
@@ -628,11 +666,27 @@ ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
     return n;
 }
 
-void CmdWrite(char *ar[]){ //falta probalo
+void CmdWrite(char *ar[]){
     if(ar[3]==NULL && ar[2]!=NULL)
         EscribirFichero(ar[0], cadtop(ar[1]),strtol(ar[2],NULL,10),0);
     else if(strcmp(ar[0],"-o")==0 && ar[3]!=NULL &&ar[4]==NULL)
         EscribirFichero(ar[1], cadtop(ar[2]),strtol(ar[3],NULL,10),1);
     else
         perror("Argumentos invalidos");
+}
+
+void memdump(void *dir, int n){
+    int i, j;
+
+    for(i=0; i<n; i++) {
+        // loop caracteres
+        // loop bytes
+    }
+}
+
+void CmdMemdump(char* ar[]){
+    if(ar[1]==NULL)
+        memdump(cadtop(ar[0]),POR_DEFECTO);
+    else
+        memdump(cadtop(ar[0]), strtol(ar[1],NULL,10));
 }
