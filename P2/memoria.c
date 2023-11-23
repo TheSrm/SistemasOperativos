@@ -441,7 +441,9 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
         return;
     }
     if (strcmp(argumentos[0],"-create")==0){
-        SharedCreate(argumentos,lista);
+        if(argumentos[1]!=NULL && argumentos[2]!=NULL) {
+            SharedCreate(argumentos, lista);
+        }else MostrarListaMemoria(*lista,1,true);
         return;
     } else {
         if (strcmp(argumentos[0], "-free") == 0) {
