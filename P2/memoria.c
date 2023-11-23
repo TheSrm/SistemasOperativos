@@ -8,6 +8,8 @@
 
 #include <sys/shm.h>
 
+double globIni1 = 0, globIni2 = 0.5, globIni3 = 9123876.912836;
+int glob1, glob2, glob3;
 
 /*malloc allocates (or deallocates) a block malloc memory. Updates the list of memory blocks
 shared allocates (or deallocates) a block shared memory. Updates the list of memory blocks
@@ -577,7 +579,7 @@ void *cadtop(char *cad){
     return (void *) strtol(cad, NULL, 16);
 }
 
-void CmdRead (char *ar[]){ // comprobar se furrula ben
+void CmdRead (char *ar[]){
     void *p;
     size_t cont=-1;  /* -1 indica leer todo el fichero*/
     ssize_t n;
@@ -603,7 +605,7 @@ void LlenarMemoria (void *p, size_t cont, unsigned char byte){
     for (i=0; i<cont;i++)
         arr[i]=byte;
 }
-void memfill(char *argumentos[]){ // comprobar se furrula ben
+void memfill(char *argumentos[]){
     if(argumentos[2] != NULL && argumentos[3] == NULL)
         LlenarMemoria(cadtop(argumentos[0]),
                       strtol(argumentos[1],NULL,10),
@@ -643,10 +645,16 @@ void Do_MemPmap (void) /*sin argumentos*/
     waitpid (pid,NULL,0);
 }
 
-void mem(char *argumentos[], listaBloques l){ //comprobar se furrula
+void mem(char *argumentos[], listaBloques l){
     long loc1, loc2, loc3;
+    static float st1, st2, st3;
+    static char stIni1='a', stIni2='Z', stIni3=0;
     if(argumentos[0]==NULL || strcmp(argumentos[0],"-all")==0) {
-        vars;
+        printf("Variables locais: %p, %p, %p\n",&loc1, &loc2, &loc3);
+        printf("Variables globais: %p, %p, %p\n", &globIni1, &globIni2, &globIni3);
+        printf("Variables estaticas: %p, %p, %p\n", &stIni1, &stIni2, &stIni3);
+        printf("Variables globais non inicializadas: %p, %p, %p\n", &glob1, &glob2, &glob3);
+        printf("Variables estaticas non inicializadas: %p, %p, %p\n", &st1, &st2, &st3);
         printf("Funcions programa: %p, %p, %p\n",memfill,cadtop,recurse);
         printf("Funcions libraria: %p, %p, %p\n",printf,time,strtol);
         MostrarListaMemoria(l, 3, true);
@@ -658,10 +666,10 @@ void mem(char *argumentos[], listaBloques l){ //comprobar se furrula
     }
     else if(strcmp(argumentos[0],"-vars")==0) {
         printf("Variables locais: %p, %p, %p\n",&loc1, &loc2, &loc3);
-        printf("Variables globais: %p, %p, %p\n");
-        printf("Variables estaticas: %p, %p, %p\n");
-        printf("Variables globais non inicializadas: %p, %p, %p\n");
-        printf("Variables estaticas non inicializadas: %p, %p, %p\n");
+        printf("Variables globais: %p, %p, %p\n", &globIni1, &globIni2, &globIni3);
+        printf("Variables estaticas: %p, %p, %p\n", &stIni1, &stIni2, &stIni3);
+        printf("Variables globais non inicializadas: %p, %p, %p\n", &glob1, &glob2, &glob3);
+        printf("Variables estaticas non inicializadas: %p, %p, %p\n", &st1, &st2, &st3);
     }
     else if(strcmp(argumentos[0],"-pmap")==0)
         Do_MemPmap();
@@ -695,4 +703,22 @@ void CmdWrite(char *ar[]){ //falta probalo
         EscribirFichero(ar[1], cadtop(ar[2]),strtol(ar[3],NULL,10),1);
     else
         perror("Argumentos invalidos");
+}
+
+int min(int a, int b){ if(a<b) return a; else return b; }
+
+void CmdMemdump(char* ar[]){
+    void *dir = cadtop(ar[0]);
+    int i, j, tam;
+
+    if(ar[1]==NULL) tam = POR_DEFECTO;
+    else tam = strtol(ar[1],NULL,10);
+    for(i=0; i<tam; i+=20) {
+        for (j = i; j < min(j + 20, tam); j++)
+            printf("%2x ",*(char *)(dir+j));
+        printf("\n");
+        for (j = i; j < min(j + 20, tam); j++)
+            printf("%2c ",*(char *)(dir+j));
+        printf("\n");
+    }
 }
