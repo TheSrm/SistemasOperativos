@@ -107,8 +107,9 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
     nuevoBloque->tamanoBloque = tamanoBloque;
     nuevoBloque->tipoAsignacion = tipoAsignacion;
     nuevoBloque->nombreDocumento=NULL;
+    char *name=strdup(nombre);
     if (nombre != NULL) {
-        nuevoBloque->nombreDocumento = strdup(nombre);
+        nuevoBloque->nombreDocumento = name;
         if (nuevoBloque->nombreDocumento == NULL) {
             perror("Error al duplicar la cadena");
             free(nuevoBloque);
@@ -140,6 +141,8 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
             // Enlazar el nuevo bloque al final de la lista
             temp2->next = (struct bloqueMemoria *) nuevoBloque;
         }
+
+    free(name);
 
 }
 
@@ -439,7 +442,9 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
         return;
     }
     if (strcmp(argumentos[0],"-create")==0){
-        SharedCreate(argumentos,lista);
+        if(argumentos[1]!=NULL && argumentos[2]!=NULL) {
+            SharedCreate(argumentos, lista);
+        }else MostrarListaMemoria(*lista,1,true);
         return;
     } else {
         if (strcmp(argumentos[0], "-free") == 0) {
@@ -646,7 +651,7 @@ void Do_MemPmap (void) /*sin argumentos*/
 void mem(char *argumentos[], listaBloques l){ //comprobar se furrula
     long loc1, loc2, loc3;
     if(argumentos[0]==NULL || strcmp(argumentos[0],"-all")==0) {
-        vars;
+        //vars;
         printf("Funcions programa: %p, %p, %p\n",memfill,cadtop,recurse);
         printf("Funcions libraria: %p, %p, %p\n",printf,time,strtol);
         MostrarListaMemoria(l, 3, true);
