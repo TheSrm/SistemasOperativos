@@ -102,8 +102,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             CmdRead(argumentos); // Funciona, probas básicas
         else if (strcmp(argPpal,"memfill")==0)
             memfill(argumentos); // Funciona, probas básicas
-        else if (strcmp(argPpal,"mem")==0)
-            mem(*l); // Funciona, repetía shared 2 veces
+       // else if (strcmp(argPpal,"mem")==0)
+           // mem(*l); // Funciona, repetía shared 2 veces
         else if (strcmp(argPpal,"write")==0)
             CmdWrite(argumentos); // Funciona, probas básicas. Mirar que pasa con /0
         else if (strcmp(argPpal,"shared")==0)
