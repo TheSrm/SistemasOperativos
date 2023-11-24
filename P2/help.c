@@ -49,25 +49,25 @@ void imprimirComando(char* cmd){
                "\t\t-pmap: mostra a saida similar á do comando pmap\n");
     else if (strcmp(cmd,"malloc")==0)
         printf("malloc [-free] [tam]\tasigna un bloque memoria de tamano tam con malloc\n"
-               "\t-free: desasigna un bloque de memoria de tamano tam asignado con malloc");
+               "\t-free: desasigna un bloque de memoria de tamano tam asignado con malloc\n");
     else if (strcmp(cmd,"shared")==0)
         printf("hared [-free|-create|-delkey] cl [tam]\tasigna memoria compartida coa clave cl no programa\n"
                "\t-create cl tam: asigna (creando) o bloque de memoria compartida con clave cl e tamano tam\n"
                "\t-free cl: desmapea o bloque de memoria compartida de clave cl\n"
-               "\t-delkey cl: elimina del sistema (sin desmapear) a clave de memoria cl");
+               "\t-delkey cl: elimina del sistema (sin desmapear) a clave de memoria cl\n");
     else if (strcmp(cmd,"mmap")==0)
         printf("mmap [-free] fich prm\tmapea o ficheiro fich con permisos prm\n"
-               "\t-free fich: desmapea o ficheiro fich");
+               "\t-free fich: desmapea o ficheiro fich\n");
     else if (strcmp(cmd,"read")==0)
-        printf("read fiche addr cont \tLe cont bytes desde fich a direccion addr");
+        printf("read fiche addr cont \tLe cont bytes desde fich a direccion addr\n");
     else if (strcmp(cmd,"write")==0)
-        printf("write [-o] fiche addr cont \tEscribe cont bytes dende a  direccion addr a fich (-o sobreescribe)");
+        printf("write [-o] fiche addr cont \tEscribe cont bytes dende a  direccion addr a fich (-o sobreescribe)\n");
     else if (strcmp(cmd,"memdump")==0)
-        printf("memdump addr cont \tMostra na pantallas os contidos (cont bytes) da posicion de memoria addr");
+        printf("memdump addr cont \tMostra na pantallas os contidos (cont bytes) da posicion de memoria addr\n");
     else if (strcmp(cmd,"memfil")==0)
-        printf("memfill addr cont byte \tENche a memoria a partir de addr (cont bytes) da posicion de memoria addr");
+        printf("memfill addr cont byte \tENche a memoria a partir de addr (cont bytes) da posicion de memoria addr\n");
     else if (strcmp(cmd,"recurse")==0)
-        printf("recurse [n]\tInvoca a funcion recursiva n veces");
+        printf("recurse [n]\tInvoca a funcion recursiva n veces\n");
 
 
 

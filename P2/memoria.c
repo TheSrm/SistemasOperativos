@@ -611,10 +611,10 @@ void LlenarMemoria (void *p, size_t cont, unsigned char byte){
         arr[i]=byte;
 }
 void memfill(char *argumentos[]){
-    if(argumentos[2] != NULL && argumentos[3] == NULL)
+    if(argumentos[2] != NULL)
         LlenarMemoria(cadtop(argumentos[0]),
                       strtol(argumentos[1],NULL,10),
-                      argumentos[2][0]);
+                      (char) strtol(argumentos[2],NULL,10));
     else
         perror("Numero de argumentos non valido");
 }
@@ -704,7 +704,7 @@ ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
 void CmdWrite(char *ar[]){ //falta probalo
     if(ar[3]==NULL && ar[2]!=NULL)
         EscribirFichero(ar[0], cadtop(ar[1]),strtol(ar[2],NULL,10),0);
-    else if(strcmp(ar[0],"-o")==0 && ar[3]!=NULL &&ar[4]==NULL)
+    else if(strcmp(ar[0],"-o")==0 && ar[3]!=NULL)
         EscribirFichero(ar[1], cadtop(ar[2]),strtol(ar[3],NULL,10),1);
     else
         perror("Argumentos invalidos");
@@ -719,10 +719,10 @@ void CmdMemdump(char* ar[]){
     if(ar[1]==NULL) tam = POR_DEFECTO;
     else tam = strtol(ar[1],NULL,10);
     for(i=0; i<tam; i+=20) {
-        for (j = i; j < min(j + 20, tam); j++)
-            printf("%2x ",*(char *)(dir+j));
+        for (j = i; j < min(i + 20, tam); j++)
+            printf("%02X ",*(char *)(dir+j));
         printf("\n");
-        for (j = i; j < min(j + 20, tam); j++)
+        for (j = i; j < min(i + 20, tam); j++)
             printf("%2c ",*(char *)(dir+j));
         printf("\n");
     }
