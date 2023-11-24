@@ -351,16 +351,20 @@ void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
 }
 
 void eliminarClave2(int clave, listaBloques *lista) {
-    bloquesMemoria *l;
+    bloquesMemoria *l = *lista;
     bool Hechoalgo=false;
+    bloquesMemoria *anterior = NULL;
 
-    for (l = (bloquesMemoria *) lista; l != NULL ||  l->key!=clave; l = (bloquesMemoria *) l->next);
+    while (l != NULL && l->key != clave) {
+        anterior = l;
+        l = l->next;
+    }
 
-
-    if(l==NULL){
-        printf("No se encuentra la clave en la lista ");
+    if (l == NULL) {
+        printf("No se encuentra la clave en la lista.\n");
         return;
     }
+
 
     l->dataCreacion= (time_t) NULL;
 
