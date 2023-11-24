@@ -44,7 +44,7 @@ void MostrarListaMemoria(listaBloques lista,int Mode, bool FT) {
         if (Mode == 0) {
             for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
                 if (strcmp(l->tipoAsignacion, "malloc") == 0) {
-                    if (l->dataCreacion!=(time_t) NULL) {
+                    if (l->key!=-1) {
                         printf("%p \t %d/%d/%d %02d:%02d  %lu %s\n",
                                l->direccion, localtime(&l->dataCreacion)->tm_mday,
                                localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_year + 1900,
@@ -58,7 +58,7 @@ void MostrarListaMemoria(listaBloques lista,int Mode, bool FT) {
         if (Mode == 1) {
             for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
                 if (strcmp(l->tipoAsignacion, "shared") == 0) {
-                    if (l->dataCreacion!=(time_t) NULL) {
+                    if (l->key!=-1) {
                         printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( key %d)\n",
                                l->direccion, localtime(&l->dataCreacion)->tm_mday,
                                localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_year + 1900,
@@ -72,7 +72,7 @@ void MostrarListaMemoria(listaBloques lista,int Mode, bool FT) {
         if (Mode == 2) {
             for (bloquesMemoria *l = lista; l != NULL; l = (bloquesMemoria *) l->next) {
                 if (strcmp(l->tipoAsignacion, "file") == 0) {
-                    if (l->dataCreacion!=(time_t) NULL) {
+                    if (l->key!=-1) {
                         printf("%p \t %d/%d/%d %02d:%02d  %lu %s ( descriptor %d)\n",
                                l->direccion, localtime(&l->dataCreacion)->tm_mday,
                                localtime(&l->dataCreacion)->tm_mon, localtime(&l->dataCreacion)->tm_year + 1900,
@@ -193,17 +193,16 @@ void SharedCreate (char *tr[],listaBloques *l){
 }
 
 
-void do_AllocateCreateshared (char *tr[],listaBloques *L)
+void do_AllocateCreateshared (char *tr[],listaBloques *l)
 {
     key_t cl;
     size_t tam;
     void *p;
 
     if (tr[0]==NULL || tr[1]==NULL) {
-        MostrarListaMemoria(*L,2,true);
+        MostrarListaMemoria(*l,2,true);
         return;
     }
-
 
     cl=(key_t)  strtoul(tr[0],NULL,10);
     tam=(size_t) strtoul(tr[1],NULL,10);
@@ -211,7 +210,7 @@ void do_AllocateCreateshared (char *tr[],listaBloques *L)
         printf ("No se asignan bloques de 0 bytes\n");
         return;
     }
-    if ((p=ObtenerMemoriaShmget(cl,tam,L))!=NULL)
+    if ((p=ObtenerMemoriaShmget(cl,tam,l))!=NULL)
         printf ("Asignados %lu bytes en %p\n",(unsigned long) tam, p);
     else
         printf ("Imposible asignar memoria compartida clave %lu:%s\n",(unsigned long) cl,strerror(errno));
@@ -357,7 +356,7 @@ void eliminarClave2(int clave, listaBloques *lista) {
 
     while (l != NULL && l->key != clave) {
         anterior = l;
-        l = l->next;
+        l = (bloquesMemoria *) l->next;
     }
 
     if (l == NULL) {
@@ -366,7 +365,7 @@ void eliminarClave2(int clave, listaBloques *lista) {
     }
 
 
-    l->dataCreacion= (time_t) NULL;
+    l->key= -1;
 
 }
 
@@ -376,7 +375,7 @@ void eliminarClave(int clave, listaBloques *lista) {
 
     while (l != NULL && l->key != clave) {
         anterior = l;
-        l = l->next;
+        l =(bloquesMemoria *) l->next;
     }
 
     if (l == NULL) {
@@ -399,7 +398,7 @@ void eliminarClave(int clave, listaBloques *lista) {
 
     // Liberar la memoria del nodo actual
     if (anterior == NULL) {
-        *lista = l->next;
+        *lista = (bloquesMemoria *) l->next;
     } else {
         anterior->next = l->next;
     }
@@ -433,7 +432,6 @@ void pecharTodoBloque(listaBloques *lista) {
 
 void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
     key_t cl;
-    char* key = argumentos[1];
     if (argumentos[0] ==NULL) {
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
@@ -466,12 +464,13 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
                 } else printf("No se ha introducido una clave para eliminar");
 
                 return;
-            }
+            } else {
+                cl = atoi(argumentos[0]);
+                ObtenerMemoriaShmget( cl, 0, lista);
             }
         }
-    printf("No se ha inyroducido una opcion valida, consulta la ayuda con help shared\n");
+    }
 }
-
 
 void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
     if (argumentos[0] == NULL) {
@@ -489,7 +488,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
     if (strcmp(argumentos[0], "-free") != 0) {
         n = strtol(argumentos[0], &strAux, 10);
 
-        if (n < 0 || *strAux != '\0' && *strAux != '\n') {
+        if (n <= 0 || *strAux != '\0' && *strAux != '\n') {
             perror("Non se introduciu un tamaño adecuado\n");
             return;
         }
