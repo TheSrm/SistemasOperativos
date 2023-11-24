@@ -24,7 +24,7 @@ recurse executes a recursive function*/
 
 void liberarBloqueMemoriaMalloc(listaBloques bloque) {
 
-    free(bloque->nombreDocumento);
+
     free(bloque->direccion);
     free(bloque);
 }
