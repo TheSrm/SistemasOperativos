@@ -21,18 +21,18 @@ memfill fills the memory with one character
 mem shows information on the memory of the process
 recurse executes a recursive function*/
 
-
+//LIberamos el bloque de memoria reservado con el free así como lo eliminamos de la lista
 void liberarBloqueMemoriaMalloc(listaBloques bloque) {
 
 
     free(bloque->direccion);
     free(bloque);
 }
-
+//Creamos la tabla para guardar los segmentos reservados de memoria
 void crearTaboaBloques(listaBloques *lista){
     *lista=NULL;
 }
-
+//Segun nos pidan mostramos mallocs, memoria shared, mmap o todos a la vez
 void MostrarListaMemoria(listaBloques lista,int Mode, bool FT) {
 
     if (FT)
@@ -92,7 +92,7 @@ void MostrarListaMemoria(listaBloques lista,int Mode, bool FT) {
     }
 }
 
-
+//INsertamos un bloque reservado en la lista
 void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, const char *tipoAsignacion, key_t key, char* nombre) {
     // Crear un nuevo bloque de memoria
     bloquesMemoria *nuevoBloque = (bloquesMemoria *) malloc(sizeof(bloquesMemoria));
@@ -146,7 +146,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
 }
 
 
-
+//COmprobamos si un bloque se ha asignado correctamente y obtenemos bloques creados por otros procesos a partir de su clave
 void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques *L)
 {
     void * p;
@@ -172,7 +172,7 @@ void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques *L)
     return (p);
 }
 
-
+//Hacemos el crear del shared, y llamamos a la función anterior para comprobar si ha sido creado correctamente
 void SharedCreate (char *tr[],listaBloques *l){
     key_t cl;
     size_t tam;
@@ -216,6 +216,8 @@ void do_AllocateCreateshared (char *tr[],listaBloques *l)
         printf ("Imposible asignar memoria compartida clave %lu:%s\n",(unsigned long) cl,strerror(errno));
 }
 
+
+//Eliminamos un documento de la lista
 void eliminarDocumento(int key, listaBloques *lista) {
     bloquesMemoria *actual = *lista;
     bloquesMemoria *anterior = NULL;
@@ -252,6 +254,7 @@ void eliminarDocumento(int key, listaBloques *lista) {
     free(actual);
 }
 
+//mapeamos un fichero a memoria, y despois insertamos este na taboa
 void * MapearFichero (char * fichero, int protection, listaBloques *l)
 {
     int df, map=MAP_PRIVATE,modo=O_RDONLY;
@@ -262,14 +265,14 @@ void * MapearFichero (char * fichero, int protection, listaBloques *l)
         modo=O_RDWR;
     if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
         return NULL;
-    if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
+    if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)//Función que realmente fai o traballo
         return NULL;
     insertarElemento(l,p,s.st_size,"file",df,fichero);
     return p;
 }
 
 
-
+//transmforma os argumentos pasados a argumentos lexibles pola funcion anterior
 void do_AllocateMmap(char *arg[],listaBloques *L)
 {
     char *perm;
@@ -323,7 +326,7 @@ void desmapearSegmento(int clave, listaBloques *lista) {
 //Si no salí en el bucle anterior, no encontré la clave
     printf("Clave %d no encontrada en la lista.\n", clave);
 }
-
+//Mapea ficheros en memoria
 void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
     if (argumentos[0]==NULL || strcmp(argumentos[0],"-free")!=0){
         do_AllocateMmap(argumentos,l);
@@ -349,6 +352,7 @@ void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
         return;
 }
 
+//Usada para desmapear unah clave
 void eliminarClave2(int clave, listaBloques *lista) {
     bloquesMemoria *l = *lista;
     bool Hechoalgo=false;
@@ -368,7 +372,7 @@ void eliminarClave2(int clave, listaBloques *lista) {
     l->key= -1;
 
 }
-
+//LIbera clave e elimina da lista, usada cando cerramos o programa
 void eliminarClave(int clave, listaBloques *lista) {
     bloquesMemoria *l = *lista;
     bloquesMemoria *anterior = NULL;
@@ -410,7 +414,7 @@ void eliminarClave(int clave, listaBloques *lista) {
 
 
 
-
+//FUnción encargada de cerrar todo cando saimos, non era necesaria,pero fai que de ningunha meneira teñamos memory leaks
 void pecharTodoBloque(listaBloques *lista) {
     bloquesMemoria *actual = *lista;
     bloquesMemoria *siguiente;
@@ -429,10 +433,10 @@ void pecharTodoBloque(listaBloques *lista) {
     }
 }
 
-
+//Crea, desmapea, elimina memoria compartida seun o qwue lle mandemos
 void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
     key_t cl;
-    if (argumentos[0] ==NULL) {
+    if (argumentos[0] ==NULL) { //Se non hay argumentos, mostro a lista
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
@@ -445,14 +449,14 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
     if (strcmp(argumentos[0],"-create")==0){
         if(argumentos[1]!=NULL && argumentos[2]!=NULL) {
             SharedCreate(argumentos, lista);
-        }else MostrarListaMemoria(*lista,1,true);
+        }else MostrarListaMemoria(*lista,1,true);//Se non me poñen os 2 tamaños, non imvento, mostro a lista
         return;
     } else {
         if (strcmp(argumentos[0], "-free") == 0) {
             if (argumentos[1] != NULL) {
 
                 cl = (key_t) strtoul(argumentos[1], NULL, 10);
-                eliminarClave2(cl, lista);
+                eliminarClave2(cl, lista);//Desmapeo
             } else printf("No se ha introducido una clave para desmapear");
             return;
 
@@ -460,7 +464,7 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
             if (strcmp(argumentos[0], "-delkey") == 0) {
                 if (argumentos[1] != NULL) {
                     cl = (key_t) strtoul(argumentos[1], NULL, 10);
-                    desmapearSegmento(cl, lista);
+                    desmapearSegmento(cl, lista);//Elimino a clave
                 } else printf("No se ha introducido una clave para eliminar");
 
                 return;
@@ -472,8 +476,9 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
     }
 }
 
+//Asigno, ou libero memoria segundo me pidan
 void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
-    if (argumentos[0] == NULL) {
+    if (argumentos[0] == NULL) {//Se non hai argumentos, mostro a lista, se hai
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
@@ -486,6 +491,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
     char *strAux = NULL;
 
     if (strcmp(argumentos[0], "-free") != 0) {
+        //Se non é un free, comprobo que o tamaño é un numero maior que 0 e fago o malloc
         n = strtol(argumentos[0], &strAux, 10);
 
         if (n <= 0 || *strAux != '\0' && *strAux != '\n') {
@@ -501,7 +507,8 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
 
         insertarElemento(lista, A, n, "malloc", 0,"malloc");
         printf("Se ha asignado memoria correspondiente a %d bytes en %p\n", n, A);
-    } else {
+    } else { 
+        //Se é un free, comprobo que introduciron un tamaño adecuado e libero 
         if (argumentos[1] == NULL) {
             printf("Error: Debe proporcionar el tamaño a liberar.\n");
             return;
@@ -516,7 +523,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
 
         bloquesMemoria *l = *lista;
         bloquesMemoria *anterior = NULL;
-
+//Busco o bloque se este existe, libero, se non non podo facer nada
         while (l != NULL) {
             if (l->tamanoBloque == n) {
                 // Eliminar el bloque encontrado
@@ -540,6 +547,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
         printf("Non hai bloque dese tamano asignado con malloc\n");
     }
 }
+//MOstro as direccións das variable local automatico e da estática estatico
 void intRecurse (int n) {
     char automatico[TAMANO];
     static char estatico[TAMANO];
@@ -560,6 +568,7 @@ void recurse (char* argumentos[MAXARGS]){
     //free(strAux[0]);
 }
 
+//Comando para leer ficheiros
 ssize_t LeerFichero (char *f, void *p, size_t cont)
 {
     struct stat s;
@@ -571,6 +580,7 @@ ssize_t LeerFichero (char *f, void *p, size_t cont)
     if (cont==-1)   /* si pasamos -1 como bytes a leer lo leemos entero*/
         cont=s.st_size;
     if ((n=read(df,p,cont))==-1){
+        //función que fai realmente o traballo, o resto son comprobacións
         aux=errno;
         close(df);
         errno=aux;
@@ -649,7 +659,7 @@ void Do_MemPmap (void) /*sin argumentos*/
     }
     waitpid (pid,NULL,0);
 }
-
+//MSegundo me pida, mositrarei as direccións de 3 variables locales, globales, estáticas, funcións, fundions de programa e libería, bloques de memoria reservados, ou unha representación do espazo de memoria virtual do proceso con pmap
 void mem(char *argumentos[], listaBloques l){
     long loc1, loc2, loc3;
     static float st1, st2, st3;
@@ -701,6 +711,7 @@ ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
     return n;
 }
 
+//Escribo nun ficheiro os argumentos que me pasen 
 void CmdWrite(char *ar[]){ //falta probalo
     if(ar[3]==NULL && ar[2]!=NULL)
         EscribirFichero(ar[0], cadtop(ar[1]),strtol(ar[2],NULL,10),0);
@@ -712,6 +723,8 @@ void CmdWrite(char *ar[]){ //falta probalo
 
 int min(int a, int b){ if(a<b) return a; else return b; }
 
+
+//Memdump
 void CmdMemdump(char* ar[]){
     void *dir = cadtop(ar[0]);
     int i, j, tam;
