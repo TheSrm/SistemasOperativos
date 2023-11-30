@@ -725,18 +725,26 @@ int min(int a, int b){ if(a<b) return a; else return b; }
 
 
 //Mostramos por pantalla os contidos de certa dicerrción de memoria, se non lle pasamos ata que contido, facemolo ata un valor por defecto
-void CmdMemdump(char* ar[]){
+void CmdMemdump(char* ar[]) {
+    // Convertir la cadena de caracteres a una dirección de memoria (void*)
     void *dir = cadtop(ar[0]);
+    
+    // Declarar variables para iteración y tamaño
     int i, j, tam;
 
-    if(ar[1]==NULL) tam = POR_DEFECTO;
-    else tam = strtol(ar[1],NULL,10);
-    for(i=0; i<tam; i+=20) {
+    // Establecer el tamaño del volcado de memoria
+    if (ar[1] == NULL) 
+        tam = POR_DEFECTO;  // Si no se proporciona un tamaño, usar el valor POR_DEFECTO
+    else 
+        tam = strtol(ar[1], NULL, 10);  // Convertir el segundo argumento a un entero
+
+    // Iterar a través de la memoria y mostrar el contenido en formato hexadecimal y ASCII
+    for (i = 0; i < tam; i += 20) {
         for (j = i; j < min(i + 20, tam); j++)
-            printf("%02X ",*(char *)(dir+j));
+            printf("%02X ", *(char *)(dir + j));  // Imprimir el byte en formato hexadecimal
         printf("\n");
         for (j = i; j < min(i + 20, tam); j++)
-            printf("%2c ",*(char *)(dir+j));
+            printf("%2c ", *(char *)(dir + j));  // Imprimir el byte como carácter ASCII
         printf("\n");
     }
 }
