@@ -724,7 +724,7 @@ void CmdWrite(char *ar[]){ //falta probalo
 int min(int a, int b){ if(a<b) return a; else return b; }
 
 
-//Memdump
+//Mostramos por pantalla os contidos de certa dicerrción de memoria, se non lle pasamos ata que contido, facemolo ata un valor por defecto
 void CmdMemdump(char* ar[]){
     void *dir = cadtop(ar[0]);
     int i, j, tam;
