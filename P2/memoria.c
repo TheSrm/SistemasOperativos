@@ -254,7 +254,7 @@ void eliminarDocumento(int key, listaBloques *lista) {
     free(actual);
 }
 
-//mapeamos un fichero a memoria, y despois insertamos este na taboa
+//mapeamos un fichero a memoria, e despois insertamos este na taboa
 void * MapearFichero (char * fichero, int protection, listaBloques *l)
 {
     int df, map=MAP_PRIVATE,modo=O_RDONLY;
@@ -268,6 +268,7 @@ void * MapearFichero (char * fichero, int protection, listaBloques *l)
     if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)//Función que realmente fai o traballo
         return NULL;
     insertarElemento(l,p,s.st_size,"file",df,fichero);
+    //close(df);
     return p;
 }
 
@@ -328,22 +329,21 @@ void desmapearSegmento(int clave, listaBloques *lista) {
 }
 //Mapea ficheros en memoria
 void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
+    bloquesMemoria *L;
     if (argumentos[0]==NULL || strcmp(argumentos[0],"-free")!=0){
         do_AllocateMmap(argumentos,l);
         return;
     }
     if (strcmp(argumentos[0],"-free")==0){
-        bloquesMemoria *L;
-        for ( L = *l; l != NULL; L = (bloquesMemoria *) L->next) {
-            if (strcmp(L->nombreDocumento,argumentos[1])==0)
-                break;
-        }
+        for ( L = *l;
+        L != NULL && strcmp(L->nombreDocumento,argumentos[1])!=0;
+        L = (bloquesMemoria *) L->next);
         if (L==NULL){
-            printf("No se encuentra ese bloque en la lista");
+            printf("No se encuentra ese bloque en la lista\n");
             return;
+        }else {
+            eliminarDocumento(L->key,l);
         }
-        else
-            desmapearSegmento(L->key,l);
         return;
     }
     printf("No has introducido una opción válida, usa help mmap para ver las opciones disponibles.\n");
@@ -478,6 +478,10 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
 
 //Asigno, ou libero memoria segundo me pidan
 void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
+    int n;
+    char *strAux = NULL;
+    bloquesMemoria *l = *lista, *anterior = NULL;
+
     if (argumentos[0] == NULL) {//Se non hai argumentos, mostro a lista, se hai
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
@@ -486,9 +490,6 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
         }
         return;
     }
-
-    int n;
-    char *strAux = NULL;
 
     if (strcmp(argumentos[0], "-free") != 0) {
         //Se non é un free, comprobo que o tamaño é un numero maior que 0 e fago o malloc
@@ -521,8 +522,6 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
             return;
         }
 
-        bloquesMemoria *l = *lista;
-        bloquesMemoria *anterior = NULL;
 //Busco o bloque se este existe, libero, se non non podo facer nada
         while (l != NULL) {
             if (l->tamanoBloque == n) {
