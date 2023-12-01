@@ -1,5 +1,5 @@
-p2: p2.c entradas.o
-	gcc -g -o p2 p2.c entradas.o funcionsTemporais.o historial.o autores.o procesos.o ficheiros.o help.o memoria.o
+p3: p3.c entradas.o
+	gcc -g -o p3 p3.c entradas.o funcionsTemporais.o historial.o autores.o procesos.o ficheiros.o help.o memoria.o
 entradas.o: entradas.c entradas.h funcionsTemporais.o historial.o autores.o procesos.o ficheiros.o help.o memoria.o
 	gcc -g -c entradas.o entradas.c
 funcionsTemporais.o: funcionsTemporais.c funcionsTemporais.h

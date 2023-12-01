@@ -13,7 +13,9 @@ int main(){
     historial h = crearHistBaleiro();
     taboaFicheiros t;
     listaBloques l;
+    listaProcesos p;
 
+    crearListaProcesos(&p);
     crearTaboaFich(&t);
     crearTaboaBloques(&l);
 

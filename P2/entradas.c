@@ -33,7 +33,7 @@ void repetirComando(char **argumentos, historial *h, taboaFicheiros *t, listaBlo
 }
 
 //Troceamos o comando en argPpal, donde se garda o comando e argumentos[], donde gardaremos os argumentos de cada comando
-void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques *l) {
+void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques *l, listaProcesos *p) {
     int i;//Creamos as variables necesarias para o correcto funcionamento da función
     char *argPpal, *argumentos[MAXARGS];
 
@@ -114,7 +114,9 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             CmdMemdump(argumentos);
         else if (strcmp(argPpal,"mem")==0)
             mem(argumentos,*l);
-        else
+        else if (strcmp(argPpal,"uid")==0)
+            uid(argumentos);
+        else // FAIME EXEC
             printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
     }
 

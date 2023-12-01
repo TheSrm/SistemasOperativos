@@ -21,18 +21,18 @@ memfill fills the memory with one character
 mem shows information on the memory of the process
 recurse executes a recursive function*/
 
-//LIberamos el bloque de memoria reservado con el free así como lo eliminamos de la lista
+//LIbera bloque y elimina de la lista
 void liberarBloqueMemoriaMalloc(listaBloques bloque) {
 
 
     free(bloque->direccion);
     free(bloque);
 }
-//Creamos la tabla para guardar los segmentos reservados de memoria
+
 void crearTaboaBloques(listaBloques *lista){
     *lista=NULL;
 }
-//Segun nos pidan mostramos mallocs, memoria shared, mmap o todos a la vez
+
 void MostrarListaMemoria(listaBloques lista,int Mode, bool FT) {
 
     if (FT)
@@ -92,7 +92,7 @@ void MostrarListaMemoria(listaBloques lista,int Mode, bool FT) {
     }
 }
 
-//INsertamos un bloque reservado en la lista
+//Inserta un elemento
 void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, const char *tipoAsignacion, key_t key, char* nombre) {
     // Crear un nuevo bloque de memoria
     bloquesMemoria *nuevoBloque = (bloquesMemoria *) malloc(sizeof(bloquesMemoria));
@@ -146,7 +146,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
 }
 
 
-//COmprobamos si un bloque se ha asignado correctamente y obtenemos bloques creados por otros procesos a partir de su clave
+//Obten a memoria dun segmento de memoria comapartida ou conéctase a outro creado por outro proceso
 void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques *L)
 {
     void * p;
@@ -172,7 +172,7 @@ void * ObtenerMemoriaShmget (key_t clave, size_t tam,listaBloques *L)
     return (p);
 }
 
-//Hacemos el crear del shared, y llamamos a la función anterior para comprobar si ha sido creado correctamente
+//CRea un segmento de memoria comaprtida
 void SharedCreate (char *tr[],listaBloques *l){
     key_t cl;
     size_t tam;
@@ -215,9 +215,7 @@ void do_AllocateCreateshared (char *tr[],listaBloques *l)
     else
         printf ("Imposible asignar memoria compartida clave %lu:%s\n",(unsigned long) cl,strerror(errno));
 }
-
-
-//Eliminamos un documento de la lista
+//Elimina un documento, -free de mmap
 void eliminarDocumento(int key, listaBloques *lista) {
     bloquesMemoria *actual = *lista;
     bloquesMemoria *anterior = NULL;
@@ -254,7 +252,6 @@ void eliminarDocumento(int key, listaBloques *lista) {
     free(actual);
 }
 
-//mapeamos un fichero a memoria, e despois insertamos este na taboa
 void * MapearFichero (char * fichero, int protection, listaBloques *l)
 {
     int df, map=MAP_PRIVATE,modo=O_RDONLY;
@@ -265,15 +262,14 @@ void * MapearFichero (char * fichero, int protection, listaBloques *l)
         modo=O_RDWR;
     if (stat(fichero,&s)==-1 || (df=open(fichero, modo))==-1)
         return NULL;
-    if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)//Función que realmente fai o traballo
+    if ((p=mmap (NULL,s.st_size, protection,map,df,0))==MAP_FAILED)
         return NULL;
     insertarElemento(l,p,s.st_size,"file",df,fichero);
-    //close(df);
     return p;
 }
 
 
-//transmforma os argumentos pasados a argumentos lexibles pola funcion anterior
+
 void do_AllocateMmap(char *arg[],listaBloques *L)
 {
     char *perm;
@@ -295,7 +291,7 @@ void do_AllocateMmap(char *arg[],listaBloques *L)
     else
         printf ("fichero %s mapeado en %p\n", arg[0], p);
 }
-
+//Desmapea el segmento
 void desmapearSegmento(int clave, listaBloques *lista) {
     listaBloques actual = *lista;
 
@@ -327,23 +323,24 @@ void desmapearSegmento(int clave, listaBloques *lista) {
 //Si no salí en el bucle anterior, no encontré la clave
     printf("Clave %d no encontrada en la lista.\n", clave);
 }
-//Mapea ficheros en memoria
+
 void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
-    bloquesMemoria *L;
     if (argumentos[0]==NULL || strcmp(argumentos[0],"-free")!=0){
         do_AllocateMmap(argumentos,l);
         return;
     }
     if (strcmp(argumentos[0],"-free")==0){
-        for ( L = *l;
-        L != NULL && strcmp(L->nombreDocumento,argumentos[1])!=0;
-        L = (bloquesMemoria *) L->next);
-        if (L==NULL){
-            printf("No se encuentra ese bloque en la lista\n");
-            return;
-        }else {
-            eliminarDocumento(L->key,l);
+        bloquesMemoria *L;
+        for ( L = *l; l != NULL; L = (bloquesMemoria *) L->next) {
+            if (strcmp(L->nombreDocumento,argumentos[1])==0)
+                break;
         }
+        if (L==NULL){
+            printf("No se encuentra ese bloque en la lista");
+            return;
+        }
+        else
+            desmapearSegmento(L->key,l);
         return;
     }
     printf("No has introducido una opción válida, usa help mmap para ver las opciones disponibles.\n");
@@ -351,8 +348,7 @@ void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
 
         return;
 }
-
-//Usada para desmapear unah clave
+//Elimina
 void eliminarClave2(int clave, listaBloques *lista) {
     bloquesMemoria *l = *lista;
     bool Hechoalgo=false;
@@ -372,7 +368,7 @@ void eliminarClave2(int clave, listaBloques *lista) {
     l->key= -1;
 
 }
-//LIbera clave e elimina da lista, usada cando cerramos o programa
+//ELimina unha memoria comaprtida cando saimos,
 void eliminarClave(int clave, listaBloques *lista) {
     bloquesMemoria *l = *lista;
     bloquesMemoria *anterior = NULL;
@@ -414,7 +410,7 @@ void eliminarClave(int clave, listaBloques *lista) {
 
 
 
-//FUnción encargada de cerrar todo cando saimos, non era necesaria,pero fai que de ningunha meneira teñamos memory leaks
+//Borra todo cando saimos, non é necesaria
 void pecharTodoBloque(listaBloques *lista) {
     bloquesMemoria *actual = *lista;
     bloquesMemoria *siguiente;
@@ -433,10 +429,10 @@ void pecharTodoBloque(listaBloques *lista) {
     }
 }
 
-//Crea, desmapea, elimina memoria compartida seun o qwue lle mandemos
+//Crea memoria compartida, desmapea, borra ou conéctase a unha creada por outro
 void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
     key_t cl;
-    if (argumentos[0] ==NULL) { //Se non hay argumentos, mostro a lista
+    if (argumentos[0] ==NULL) {
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
@@ -449,14 +445,14 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
     if (strcmp(argumentos[0],"-create")==0){
         if(argumentos[1]!=NULL && argumentos[2]!=NULL) {
             SharedCreate(argumentos, lista);
-        }else MostrarListaMemoria(*lista,1,true);//Se non me poñen os 2 tamaños, non imvento, mostro a lista
+        }else MostrarListaMemoria(*lista,1,true);
         return;
     } else {
         if (strcmp(argumentos[0], "-free") == 0) {
             if (argumentos[1] != NULL) {
 
                 cl = (key_t) strtoul(argumentos[1], NULL, 10);
-                eliminarClave2(cl, lista);//Desmapeo
+                eliminarClave2(cl, lista);
             } else printf("No se ha introducido una clave para desmapear");
             return;
 
@@ -464,7 +460,7 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
             if (strcmp(argumentos[0], "-delkey") == 0) {
                 if (argumentos[1] != NULL) {
                     cl = (key_t) strtoul(argumentos[1], NULL, 10);
-                    desmapearSegmento(cl, lista);//Elimino a clave
+                    desmapearSegmento(cl, lista);
                 } else printf("No se ha introducido una clave para eliminar");
 
                 return;
@@ -475,14 +471,9 @@ void sharedMemory ( char *argumentos[MAXARGS],listaBloques *lista){
         }
     }
 }
-
-//Asigno, ou libero memoria segundo me pidan
+//Reserva memoria, e libera con un free
 void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
-    int n;
-    char *strAux = NULL;
-    bloquesMemoria *l = *lista, *anterior = NULL;
-
-    if (argumentos[0] == NULL) {//Se non hai argumentos, mostro a lista, se hai
+    if (argumentos[0] == NULL) {
         if (*lista == NULL) {
             printf("Non hai ningún bloque asignado no momento\n");
         } else {
@@ -491,8 +482,10 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
         return;
     }
 
+    int n;
+    char *strAux = NULL;
+
     if (strcmp(argumentos[0], "-free") != 0) {
-        //Se non é un free, comprobo que o tamaño é un numero maior que 0 e fago o malloc
         n = strtol(argumentos[0], &strAux, 10);
 
         if (n <= 0 || *strAux != '\0' && *strAux != '\n') {
@@ -508,8 +501,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
 
         insertarElemento(lista, A, n, "malloc", 0,"malloc");
         printf("Se ha asignado memoria correspondiente a %d bytes en %p\n", n, A);
-    } else { 
-        //Se é un free, comprobo que introduciron un tamaño adecuado e libero 
+    } else {
         if (argumentos[1] == NULL) {
             printf("Error: Debe proporcionar el tamaño a liberar.\n");
             return;
@@ -522,7 +514,9 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
             return;
         }
 
-//Busco o bloque se este existe, libero, se non non podo facer nada
+        bloquesMemoria *l = *lista;
+        bloquesMemoria *anterior = NULL;
+
         while (l != NULL) {
             if (l->tamanoBloque == n) {
                 // Eliminar el bloque encontrado
@@ -546,7 +540,7 @@ void memAlloc(listaBloques *lista, char *argumentos[MAXARGS]) {
         printf("Non hai bloque dese tamano asignado con malloc\n");
     }
 }
-//MOstro as direccións das variable local automatico e da estática estatico
+//Crea un array estático, un dinámico e da a dirección do seu primeiro elemento
 void intRecurse (int n) {
     char automatico[TAMANO];
     static char estatico[TAMANO];
@@ -556,7 +550,7 @@ void intRecurse (int n) {
     if (n>0)
         intRecurse(n-1);
 }
-
+//FUnción que se aplica recursivamente n veces,
 void recurse (char* argumentos[MAXARGS]){
     int n;
     char* strAux[1];
@@ -566,8 +560,7 @@ void recurse (char* argumentos[MAXARGS]){
         intRecurse(n);
     //free(strAux[0]);
 }
-
-//Comando para leer ficheiros
+//Abre e lee o contido do ficheiro
 ssize_t LeerFichero (char *f, void *p, size_t cont)
 {
     struct stat s;
@@ -579,7 +572,6 @@ ssize_t LeerFichero (char *f, void *p, size_t cont)
     if (cont==-1)   /* si pasamos -1 como bytes a leer lo leemos entero*/
         cont=s.st_size;
     if ((n=read(df,p,cont))==-1){
-        //función que fai realmente o traballo, o resto son comprobacións
         aux=errno;
         close(df);
         errno=aux;
@@ -592,7 +584,7 @@ ssize_t LeerFichero (char *f, void *p, size_t cont)
 void *cadtop(char *cad){
     return (void *) strtol(cad, NULL, 16);
 }
-
+//Lee n bytes dun ficheiro, se non damos n é todo o ficheiro a memoria
 void CmdRead (char *ar[]){
     void *p;
     size_t cont=-1;  /* -1 indica leer todo el fichero*/
@@ -619,6 +611,7 @@ void LlenarMemoria (void *p, size_t cont, unsigned char byte){
     for (i=0; i<cont;i++)
         arr[i]=byte;
 }
+//Enche a memoria con un argumento, que lle asamos nos, o argumento está sempre en amiusculas
 void memfill(char *argumentos[]){
     if(argumentos[2] != NULL)
         LlenarMemoria(cadtop(argumentos[0]),
@@ -627,7 +620,7 @@ void memfill(char *argumentos[]){
     else
         perror("Numero de argumentos non valido");
 }
-
+//Usado para obter pmap, usa fork para crear procesos fillos que fan o comando pmap
 void Do_MemPmap (void) /*sin argumentos*/
 { pid_t pid;       /*hace el pmap (o equivalente) del proceso actual*/
     char elpid[32];
@@ -658,7 +651,7 @@ void Do_MemPmap (void) /*sin argumentos*/
     }
     waitpid (pid,NULL,0);
 }
-//MSegundo me pida, mositrarei as direccións de 3 variables locales, globales, estáticas, funcións, fundions de programa e libería, bloques de memoria reservados, ou unha representación do espazo de memoria virtual do proceso con pmap
+//MOstra contidos de memoria virtual dun procceso,
 void mem(char *argumentos[], listaBloques l){
     long loc1, loc2, loc3;
     static float st1, st2, st3;
@@ -688,7 +681,7 @@ void mem(char *argumentos[], listaBloques l){
     else if(strcmp(argumentos[0],"-pmap")==0)
         Do_MemPmap();
 }
-
+//Escribe un ficheiro, noon o fai se non pode abrilo ou da erro ao escribilo
 ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
 {
     ssize_t  n;
@@ -709,8 +702,7 @@ ssize_t EscribirFichero (char *f, void *p, size_t cont,int overwrite)
     close (df);
     return n;
 }
-
-//Escribo nun ficheiro os argumentos que me pasen 
+//Escribe en un documento, se non se pón override, escribe directamente, se o poñemos borra e escribe despois
 void CmdWrite(char *ar[]){ //falta probalo
     if(ar[3]==NULL && ar[2]!=NULL)
         EscribirFichero(ar[0], cadtop(ar[1]),strtol(ar[2],NULL,10),0);
@@ -723,27 +715,19 @@ void CmdWrite(char *ar[]){ //falta probalo
 int min(int a, int b){ if(a<b) return a; else return b; }
 
 
-//Mostramos por pantalla os contidos de certa dicerrción de memoria, se non lle pasamos ata que contido, facemolo ata un valor por defecto
-void CmdMemdump(char* ar[]) {
-    // Convertir la cadena de caracteres a una dirección de memoria (void*)
+//Mostra os contidos de memoria por pantalla, en hexadecimal e tamen en binario
+void CmdMemdump(char* ar[]){
     void *dir = cadtop(ar[0]);
-    
-    // Declarar variables para iteración y tamaño
     int i, j, tam;
 
-    // Establecer el tamaño del volcado de memoria
-    if (ar[1] == NULL) 
-        tam = POR_DEFECTO;  // Si no se proporciona un tamaño, usar el valor POR_DEFECTO
-    else 
-        tam = strtol(ar[1], NULL, 10);  // Convertir el segundo argumento a un entero
-
-    // Iterar a través de la memoria y mostrar el contenido en formato hexadecimal y ASCII
-    for (i = 0; i < tam; i += 20) {
+    if(ar[1]==NULL) tam = POR_DEFECTO;
+    else tam = strtol(ar[1],NULL,10);
+    for(i=0; i<tam; i+=20) {
         for (j = i; j < min(i + 20, tam); j++)
-            printf("%02X ", *(char *)(dir + j));  // Imprimir el byte en formato hexadecimal
+            printf("%02X ",*(char *)(dir+j));
         printf("\n");
         for (j = i; j < min(i + 20, tam); j++)
-            printf("%2c ", *(char *)(dir + j));  // Imprimir el byte como carácter ASCII
+            printf("%2c ",*(char *)(dir+j));
         printf("\n");
     }
 }
