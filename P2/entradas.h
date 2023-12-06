@@ -9,7 +9,8 @@
 #include "help.h"
 #include "memoria.h"
 
+
 void lerEntrada(char* entrada, historial* h);
-void procesarEntrada(char* entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques *l);
+void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques *l, listaProcesos *p);
 
 #endif

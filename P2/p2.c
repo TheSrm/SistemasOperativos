@@ -22,7 +22,7 @@ int main(){
     while (!rematado){
         imprPrompt();
         lerEntrada(entrada, &h);
-        procesarEntrada(entrada, &h, &rematado, &t,&l);
+        procesarEntrada(entrada, &h, &rematado, &t,&l,&p);
     }
     return 0;
 }

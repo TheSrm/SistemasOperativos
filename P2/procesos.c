@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <time.h>
 
 
 #include "procesos.h"
@@ -7,7 +8,51 @@ void crearListaProcesos(listaProcesos *lista){
     *lista=NULL;
 }
 
-void insertarListaProcesos(listaProcesos *lista,pid_t pid,time_t tempo,int estado,int prioridade, pid_t comans_line){
+void MostrarJobs(listaProcesos listaProcesos1){
+ Proceso *l;
+    for (l= listaProcesos1; l != NULL  ; l=l->next) {
+        uid_t uid = getuid();
+        printf("%d\t%s\tp=%d\t%d/%d/%d %02d:%02d\t%d %d",l->pid,getpwuid(uid)->pw_name,l->prioridade,
+               localtime(&l->data)->tm_mday,localtime(&l->data)->tm_mon,
+               localtime(&l->data)->tm_year + 1900,localtime(&l->data)->tm_hour,localtime(&l->data)->tm_min,
+               l->estado,l->commans_line);
+    }
+}
+
+void VaciarListaProcesos(listaProcesos *listaProcesos1){
+    Proceso *l;
+    for (l= (Proceso *) listaProcesos1; l != NULL  ; l=l->next) {
+        free(l);
+    }
+    free(listaProcesos1);
+}
+
+void insertarListaProcesos(listaProcesos *lista,pid_t pid,int estado,int prioridade, pid_t commans_line){
+    Proceso *nuevoBloque = (Proceso * )malloc(sizeof(Proceso));
+    Proceso *temp2 = *lista;
+
+    if (nuevoBloque == NULL) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para el nuevo proceso.\n");
+        return;
+    }
+
+    nuevoBloque->pid=pid;
+    nuevoBloque->data =time(NULL);
+    nuevoBloque->estado=estado;
+    nuevoBloque->prioridade=prioridade;
+    nuevoBloque->commans_line=commans_line;
+    nuevoBloque->next = NULL;
+
+
+    if (*lista == NULL) {
+        *lista = nuevoBloque;
+    } else {
+        // Encontrar el final de la lista
+        for (; temp2->next != NULL; temp2 =  temp2->next);
+        // Enlazar el nuevo bloque al final de la lista
+        temp2->next = nuevoBloque;
+    }
+
     
 }
 
@@ -55,12 +100,11 @@ void infosys(){
         }
 }
 
-void Cmd_fork (char *tr[])
-{
+void Cmd_fork (char *tr[],listaProcesos *listaProcesos1){
     pid_t pid;
 
     if ((pid=fork())==0){
-/*		VaciarListaProcesos(&LP); Depende de la implementación de cada uno*/
+        VaciarListaProcesos(listaProcesos1);
         printf ("ejecutando proceso %d\n", getpid());
     }
     else if (pid!=-1)
@@ -192,3 +236,43 @@ char *NombreSenal(int sen)  /*devuelve el nombre senal a partir de la senal*/
             return sigstrnum[i].nombre;
     return ("SIGUNKNOWN");
 }
+/*Combina un ArgPPal y argumentos para pasarselo a un dado*/
+void CombinarArrays(char* Destino[MAXARGS], char* String, char* Origen[MAXARGS]) {
+    int i;
+
+    // Agregar String a Destino
+    Destino[0] = String;
+
+    // Copiar elementos de Origen a Destino
+    for (i = 0; Origen[i] != NULL && i < MAXARGS - 1; ++i) {
+        Destino[i + 1] = Origen[i];
+    }
+
+}
+/*Ten sentido non está probado, pero a verdade que é o mesmo que pmap, so que eliminei os casos*/
+void ComandoNonConocido(char* ArgPpal , char* arguentos[]){
+        pid_t pid;       /*Nos da el comando de la terminal si no tenemos el comando implementado*/
+        char elpid[32];
+        char *argv[MAXARGS];
+        CombinarArrays(argv,ArgPpal,arguentos);
+
+        sprintf (elpid,"%d", (int) getpid());
+        if ((pid=fork())==-1){
+            perror ("Imposible crear proceso");
+            return;
+        }
+        if (pid==0){ /*proceso hijo*/
+            if (execvp(argv[0],argv)==-1)
+                perror("Erro accedendo á terminal ");
+
+            exit(1);
+        }
+        waitpid (pid,NULL,0);
+}
+
+void ExecutarProcesoSP(){
+
+}
+
+
+

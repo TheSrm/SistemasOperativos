@@ -13,6 +13,7 @@ typedef struct SEN{
     char *nombre;
     int senal;
 };
+
 typedef struct proceso{
     pid_t pid;
     time_t data;
@@ -25,9 +26,11 @@ typedef struct proceso{
 typedef Proceso *listaProcesos;
 
 
-void crearListaPorcesos(listaProcesos *t);
+void crearListaProcesos(listaProcesos *t);
+
 void pid(char* argumentos[MAXARGS]);
 void infosys();
 void uid(char *argumentos[]);
+void ComandoNonConocido(char* ArgPpal , char* arguentos[MAXARGS]);
 
 #endif
