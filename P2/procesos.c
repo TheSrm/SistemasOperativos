@@ -273,7 +273,6 @@ void ComandoNonConocido(char *comando, char *argumentos[]) {
         exit(EXIT_FAILURE);
 
     } else {  // Proceso padre
-        // Espera a que el proceso hijo termine
         waitpid(pid, NULL, 0);
     }
 
