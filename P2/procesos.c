@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <time.h>
+#include <sys/resource.h>
 
 
 #include "procesos.h"
@@ -8,14 +9,124 @@ void crearListaProcesos(listaProcesos *lista){
     *lista=NULL;
 }
 
+
+static  struct SEN sigstrnum[] = {
+        {"HUP", SIGHUP},
+        {"INT", SIGINT},
+        {"QUIT", SIGQUIT},
+        {"ILL", SIGILL},
+        {"TRAP", SIGTRAP},
+        {"ABRT", SIGABRT},
+        {"IOT", SIGIOT},
+        {"BUS", SIGBUS},
+        {"FPE", SIGFPE},
+        {"KILL", SIGKILL},
+        {"USR1", SIGUSR1},
+        {"SEGV", SIGSEGV},
+        {"USR2", SIGUSR2},
+        {"PIPE", SIGPIPE},
+        {"ALRM", SIGALRM},
+        {"TERM", SIGTERM},
+        {"CHLD", SIGCHLD},
+        {"CONT", SIGCONT},
+        {"STOP", SIGSTOP},
+        {"TSTP", SIGTSTP},
+        {"TTIN", SIGTTIN},
+        {"TTOU", SIGTTOU},
+        {"URG", SIGURG},
+        {"XCPU", SIGXCPU},
+        {"XFSZ", SIGXFSZ},
+        {"VTALRM", SIGVTALRM},
+        {"PROF", SIGPROF},
+        {"WINCH", SIGWINCH},
+        {"IO", SIGIO},
+        {"SYS", SIGSYS},
+/*senales que no hay en todas partes*/
+#ifdef SIGPOLL
+        {"POLL", SIGPOLL},
+#endif
+#ifdef SIGPWR
+        {"PWR", SIGPWR},
+#endif
+#ifdef SIGEMT
+        {"EMT", SIGEMT},
+#endif
+#ifdef SIGINFO
+        {"INFO", SIGINFO},
+#endif
+#ifdef SIGSTKFLT
+        {"STKFLT", SIGSTKFLT},
+#endif
+#ifdef SIGCLD
+        {"CLD", SIGCLD},
+#endif
+#ifdef SIGLOST
+        {"LOST", SIGLOST},
+#endif
+#ifdef SIGCANCEL
+        {"CANCEL", SIGCANCEL},
+#endif
+#ifdef SIGTHAW
+        {"THAW", SIGTHAW},
+#endif
+#ifdef SIGFREEZE
+        {"FREEZE", SIGFREEZE},
+#endif
+#ifdef SIGLWP
+        {"LWP", SIGLWP},
+#endif
+#ifdef SIGWAITING
+        {"WAITING", SIGWAITING},
+#endif
+        {NULL,-1},
+};    /*fin array sigstrnum */
+
+
+int ValorSenal(char * sen)  /*devuelve el numero de senial a partir del nombre*/
+{
+    int i;
+    for (i=0; sigstrnum[i].nombre!=NULL; i++)
+        if (!strcmp(sen, sigstrnum[i].nombre))
+            return sigstrnum[i].senal;
+    return -1;
+}
+
+
+char *NombreSenal(int sen)  /*devuelve el nombre senal a partir de la senal*/
+{
+    int i;
+    for (i=0; sigstrnum[i].nombre!=NULL; i++)
+        if (sen==sigstrnum[i].senal)
+            return sigstrnum[i].nombre;
+    return ("SIGUNKNOWN");
+}
+
+int obtener_estado_proceso(pid_t pid) {
+    int status;
+
+    // Esperar al proceso hijo
+    if (waitpid(pid, &status, 0) == -1) {
+        perror("Error al esperar al proceso hijo");
+        exit(EXIT_FAILURE);
+    }
+
+    if (WIFEXITED(status)) {
+        printf("El proceso con PID %d ha terminado con estado: %d\n", pid, WEXITSTATUS(status));
+        return WEXITSTATUS(status);
+    } else {
+        printf("El proceso con PID %d ha terminado de manera anormal\n", pid);
+        return  WTERMSIG(status); // Otra opción: return;
+    }
+}
+
 void MostrarJobs(listaProcesos listaProcesos1){
  Proceso *l;
     for (l= listaProcesos1; l != NULL  ; l=l->next) {
         uid_t uid = getuid();
-        printf("%d\t%s\tp=%d\t%d/%d/%d %02d:%02d\t%d %d",l->pid,getpwuid(uid)->pw_name,l->prioridade,
+        printf("%d\t%s\tp=%d\t%d/%d/%d %02d:%02d:%02d\t%d %s",l->pid,getpwuid(uid)->pw_name,l->prioridade,
                localtime(&l->data)->tm_mday,localtime(&l->data)->tm_mon,
                localtime(&l->data)->tm_year + 1900,localtime(&l->data)->tm_hour,localtime(&l->data)->tm_min,
-               l->estado,l->commans_line);
+               localtime(&l->data)->tm_sec, obtener_estado_proceso(l->pid),l->commans_line);
     }
 }
 
@@ -27,7 +138,9 @@ void VaciarListaProcesos(listaProcesos *listaProcesos1){
     free(listaProcesos1);
 }
 
-void insertarListaProcesos(listaProcesos *lista,pid_t pid,int estado,int prioridade, pid_t commans_line){
+
+
+void insertarListaProcesos(listaProcesos *lista,pid_t pid,int prioridade, char* commans_line){
     Proceso *nuevoBloque = (Proceso * )malloc(sizeof(Proceso));
     Proceso *temp2 = *lista;
 
@@ -38,7 +151,6 @@ void insertarListaProcesos(listaProcesos *lista,pid_t pid,int estado,int priorid
 
     nuevoBloque->pid=pid;
     nuevoBloque->data =time(NULL);
-    nuevoBloque->estado=estado;
     nuevoBloque->prioridade=prioridade;
     nuevoBloque->commans_line=commans_line;
     nuevoBloque->next = NULL;
@@ -146,102 +258,16 @@ int CambiarVariable(char * var, char * valor, char *e[]) /*cambia una variable e
 
 /*las siguientes funciones nos permiten obtener el nombre de una senal a partir
 del número y viceversa */
-static  struct SEN sigstrnum[] = {
-        {"HUP", SIGHUP},
-        {"INT", SIGINT},
-        {"QUIT", SIGQUIT},
-        {"ILL", SIGILL},
-        {"TRAP", SIGTRAP},
-        {"ABRT", SIGABRT},
-        {"IOT", SIGIOT},
-        {"BUS", SIGBUS},
-        {"FPE", SIGFPE},
-        {"KILL", SIGKILL},
-        {"USR1", SIGUSR1},
-        {"SEGV", SIGSEGV},
-        {"USR2", SIGUSR2},
-        {"PIPE", SIGPIPE},
-        {"ALRM", SIGALRM},
-        {"TERM", SIGTERM},
-        {"CHLD", SIGCHLD},
-        {"CONT", SIGCONT},
-        {"STOP", SIGSTOP},
-        {"TSTP", SIGTSTP},
-        {"TTIN", SIGTTIN},
-        {"TTOU", SIGTTOU},
-        {"URG", SIGURG},
-        {"XCPU", SIGXCPU},
-        {"XFSZ", SIGXFSZ},
-        {"VTALRM", SIGVTALRM},
-        {"PROF", SIGPROF},
-        {"WINCH", SIGWINCH},
-        {"IO", SIGIO},
-        {"SYS", SIGSYS},
-/*senales que no hay en todas partes*/
-#ifdef SIGPOLL
-        {"POLL", SIGPOLL},
-#endif
-#ifdef SIGPWR
-        {"PWR", SIGPWR},
-#endif
-#ifdef SIGEMT
-        {"EMT", SIGEMT},
-#endif
-#ifdef SIGINFO
-        {"INFO", SIGINFO},
-#endif
-#ifdef SIGSTKFLT
-        {"STKFLT", SIGSTKFLT},
-#endif
-#ifdef SIGCLD
-        {"CLD", SIGCLD},
-#endif
-#ifdef SIGLOST
-        {"LOST", SIGLOST},
-#endif
-#ifdef SIGCANCEL
-        {"CANCEL", SIGCANCEL},
-#endif
-#ifdef SIGTHAW
-        {"THAW", SIGTHAW},
-#endif
-#ifdef SIGFREEZE
-        {"FREEZE", SIGFREEZE},
-#endif
-#ifdef SIGLWP
-        {"LWP", SIGLWP},
-#endif
-#ifdef SIGWAITING
-        {"WAITING", SIGWAITING},
-#endif
-        {NULL,-1},
-};    /*fin array sigstrnum */
 
 
-int ValorSenal(char * sen)  /*devuelve el numero de senial a partir del nombre*/
-{
+
+bool CombinarArrays(char *Destino[MAXARGS], char *String, char *Origen[MAXARGS]) {
     int i;
-    for (i=0; sigstrnum[i].nombre!=NULL; i++)
-        if (!strcmp(sen, sigstrnum[i].nombre))
-            return sigstrnum[i].senal;
-    return -1;
-}
-
-
-char *NombreSenal(int sen)  /*devuelve el nombre senal a partir de la senal*/
-{
-    int i;
-    for (i=0; sigstrnum[i].nombre!=NULL; i++)
-        if (sen==sigstrnum[i].senal)
-            return sigstrnum[i].nombre;
-    return ("SIGUNKNOWN");
-}
-void CombinarArrays(char *Destino[MAXARGS], char *String, char *Origen[MAXARGS]) {
-    int i;
+    bool ESSP=false;
 
     if (String == NULL) {
         printf("No aceptamos comandos de este tipo\n");
-        return;
+        return ESSP;
     }
 
     // Agregar String a Destino
@@ -249,17 +275,22 @@ void CombinarArrays(char *Destino[MAXARGS], char *String, char *Origen[MAXARGS])
 
     // Copiar elementos de Origen a Destino
     for (i = 0; Origen[i] != NULL && i < MAXARGS - 1; ++i) {
-        Destino[i + 1] = Origen[i];
+        if (strcmp(Origen[i],"&")==0)
+            ESSP=true;
+            Destino[i + 1] = Origen[i];
+
     }
 
     // Asegurarse de que la última posición del array sea NULL
     Destino[i + 1] = NULL;
+    return ESSP;
 }
 
-void ComandoNonConocido(char *comando, char *argumentos[]) {
+
+void ComandoNonConocido(char *comando, char *argumentos[],listaProcesos *l) {
     char* ComandoCorrecto[MAXARGS];
-    CombinarArrays(ComandoCorrecto,comando,argumentos);
-    //Necesitamos poñer o comando 2 veces en Comando correcto, por lagunha razón que debe ser así
+    bool insertar=CombinarArrays(ComandoCorrecto,comando,argumentos);//Necesitamos poñer o comando 2 veces en Comando correcto, por lagunha razón que debe ser así
+
     pid_t pid = fork();
 
     if (pid == -1) {
@@ -269,12 +300,26 @@ void ComandoNonConocido(char *comando, char *argumentos[]) {
 
     if (pid == 0) {  // Proceso hijo
         execvp(comando, ComandoCorrecto);
+        insertarListaProcesos(l, getpid(), getpriority(PRIO_PROCESS,getpid()), (char *) ComandoCorrecto);
         perror("Error ejecutando el comando");
         exit(EXIT_FAILURE);
 
     } else {  // Proceso padre
         waitpid(pid, NULL, 0);
     }
+
+}
+
+void EliminarJobs (char *argumentos[], listaProcesos *l){
+
+    if (strcmp(argumentos[0],"-term")){
+
+    }
+    if (strcmp(argumentos[0],"-sig")){
+
+    }
+    else
+        printf("No se ha introducido una función válida, por favor revisa el manual con help deljobs");
 
 }
 

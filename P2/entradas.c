@@ -116,8 +116,10 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             mem(argumentos,*l);
         else if (strcmp(argPpal,"uid")==0)
             uid(argumentos);
+        else if (strcmp(argPpal,"jobs")==0)
+            MostrarJobs(*p);
         else
-            ComandoNonConocido(argPpal,argumentos);//Se non recoñecemos facemos o da terminal
+            ComandoNonConocido(argPpal,argumentos,p);//Se non recoñecemos facemos o da terminal, funciona ben
     }
 
 }
