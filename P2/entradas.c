@@ -116,8 +116,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             mem(argumentos,*l);
         else if (strcmp(argPpal,"uid")==0)
             uid(argumentos);
-        else // FAIME EXEC
-            printf("Comando invalido\n");//Se non é ningun dos comandos anteriores é que non existe, polo que mostramos comando inválido e voltamos ao bucle
+        else 
+            ComandoNonConocido(argPpal,argumentos);//Se non recoñecemos facemos o da terminal
     }
 
 }
