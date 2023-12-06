@@ -268,12 +268,10 @@ void ComandoNonConocido(char *comando, char *argumentos[]) {
     }
 
     if (pid == 0) {  // Proceso hijo
-        // Usa execvp para ejecutar el comando con los argumentos
         execvp(comando, ComandoCorrecto);
-
-        // Si execvp retorna, ha habido un error
         perror("Error ejecutando el comando");
         exit(EXIT_FAILURE);
+
     } else {  // Proceso padre
         // Espera a que el proceso hijo termine
         waitpid(pid, NULL, 0);
