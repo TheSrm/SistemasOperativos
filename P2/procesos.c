@@ -236,9 +236,13 @@ char *NombreSenal(int sen)  /*devuelve el nombre senal a partir de la senal*/
             return sigstrnum[i].nombre;
     return ("SIGUNKNOWN");
 }
-/*Combina un ArgPPal y argumentos para pasarselo a un dado*/
-void CombinarArrays(char* Destino[MAXARGS], char* String, char* Origen[MAXARGS]) {
+void CombinarArrays(char *Destino[MAXARGS], char *String, char *Origen[MAXARGS]) {
     int i;
+
+    if (String == NULL) {
+        printf("No aceptamos comandos de este tipo\n");
+        return;
+    }
 
     // Agregar String a Destino
     Destino[0] = String;
@@ -248,29 +252,32 @@ void CombinarArrays(char* Destino[MAXARGS], char* String, char* Origen[MAXARGS])
         Destino[i + 1] = Origen[i];
     }
 
-}
-/*Ten sentido non está probado, pero a verdade que é o mesmo que pmap, so que eliminei os casos*/
-void ComandoNonConocido(char* ArgPpal , char* arguentos[]){
-        pid_t pid;       /*Nos da el comando de la terminal si no tenemos el comando implementado*/
-        char elpid[32];
-        char *argv[MAXARGS];
-        CombinarArrays(argv,ArgPpal,arguentos);
-
-        sprintf (elpid,"%d", (int) getpid());
-        if ((pid=fork())==-1){
-            perror ("Imposible crear proceso");
-            return;
-        }
-        if (pid==0){ /*proceso hijo*/
-            if (execvp(argv[0],argv)==-1)
-                perror("Erro accedendo á terminal ");
-
-            exit(1);
-        }
-        waitpid (pid,NULL,0);
+    // Asegurarse de que la última posición del array sea NULL
+    Destino[i + 1] = NULL;
 }
 
-void ExecutarProcesoSP(){
+void ComandoNonConocido(char *comando, char *argumentos[]) {
+    char* ComandoCorrecto[MAXARGS];
+    CombinarArrays(ComandoCorrecto,comando,argumentos);
+    //Necesitamos poñer o comando 2 veces en Comando correcto, por lagunha razón que debe ser así
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("Error en fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) {  // Proceso hijo
+        // Usa execvp para ejecutar el comando con los argumentos
+        execvp(comando, ComandoCorrecto);
+
+        // Si execvp retorna, ha habido un error
+        perror("Error ejecutando el comando");
+        exit(EXIT_FAILURE);
+    } else {  // Proceso padre
+        // Espera a que el proceso hijo termine
+        waitpid(pid, NULL, 0);
+    }
 
 }
 
