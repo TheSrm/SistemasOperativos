@@ -19,7 +19,7 @@ add_executable(P2
         help.h
         historial.c
         historial.h
-        p2.c
+        p3.c
         procesos.c
         procesos.h
         memoria.c
