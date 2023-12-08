@@ -23,8 +23,6 @@ recurse executes a recursive function*/
 
 //LIbera bloque y elimina de la lista
 void liberarBloqueMemoriaMalloc(listaBloques bloque) {
-
-
     free(bloque->direccion);
     free(bloque);
 }
@@ -109,8 +107,9 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
     nuevoBloque->tamanoBloque = tamanoBloque;
     nuevoBloque->tipoAsignacion = tipoAsignacion;
     nuevoBloque->nombreDocumento=NULL;
+    char *name =strdup(nombre);
     if (nombre != NULL) {
-        nuevoBloque->nombreDocumento = strdup(nombre);
+        nuevoBloque->nombreDocumento = name;
         if (nuevoBloque->nombreDocumento == NULL) {
             perror("Error al duplicar la cadena");
             free(nuevoBloque);
@@ -142,6 +141,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
             // Enlazar el nuevo bloque al final de la lista
             temp2->next = (struct bloqueMemoria *) nuevoBloque;
         }
+    free(name);
 
 }
 
@@ -237,8 +237,6 @@ void eliminarDocumento(int key, listaBloques *lista) {
         return;
     }
 
-    // Liberar memoria del campo nombreDocumento
-    free(actual->nombreDocumento);
 
     // Eliminar el nodo de la lista
     if (anterior == NULL) {
@@ -340,7 +338,7 @@ void MemoryMap (char* argumentos[MAXARGS],listaBloques *l){
             return;
         }
         else
-            desmapearSegmento(L->key,l);
+            eliminarDocumento(L->key,l);
         return;
     }
     printf("No has introducido una opción válida, usa help mmap para ver las opciones disponibles.\n");

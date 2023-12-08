@@ -118,6 +118,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             uid(argumentos);
         else if (strcmp(argPpal,"jobs")==0)
             MostrarJobs(*p);
+       else if (strcmp(argPpal,"deljobs")==0)
+            EliminarJobs(argumentos,p);
         else
             ComandoNonConocido(argPpal,argumentos,p);//Se non recoñecemos facemos o da terminal, funciona ben
     }

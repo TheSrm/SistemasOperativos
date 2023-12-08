@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/resource.h>
+#include "entradas.h"
 
 
 #include "procesos.h"
@@ -101,71 +102,169 @@ char *NombreSenal(int sen)  /*devuelve el nombre senal a partir de la senal*/
     return ("SIGUNKNOWN");
 }
 
-int obtener_estado_proceso(pid_t pid) {
+
+
+
+
+typedef struct {
+    int estado;
+    int senal;
+} EstadoProceso;
+
+
+
+
+
+EstadoProceso obtenerEstadoProceso(pid_t pid) {
+    EstadoProceso resultado = {0, 0};
     int status;
 
-    // Esperar al proceso hijo
-    if (waitpid(pid, &status, 0) == -1) {
-        perror("Error al esperar al proceso hijo");
-        exit(EXIT_FAILURE);
+    // Esperar a que el proceso hijo termine (modo no bloqueante)
+    pid_t result = waitpid(pid, &status, WNOHANG);
+
+    if (result == 0) {
+        // El proceso hijo aún no ha terminado
+        resultado.estado = -1;
+        return resultado;
+    } else if (result == -1) {
+        resultado.estado = EXIT_FAILURE;
+        return resultado;
     }
 
+    resultado.estado = status;
+
+    // Verificar el estado del proceso hijo
     if (WIFEXITED(status)) {
-        printf("El proceso con PID %d ha terminado con estado: %d\n", pid, WEXITSTATUS(status));
-        return WEXITSTATUS(status);
+        resultado.senal = WEXITSTATUS(status);
+    } else if (WIFSIGNALED(status)) {
+        resultado.estado = 1;  // Estado diferente de cero para indicar que se terminó por señal
+        resultado.senal = WTERMSIG(status);
+    } else if (WIFSTOPPED(status)) {
+        resultado.estado = 2;  // Estado diferente de cero para indicar que se detuvo por señal
+        resultado.senal = WSTOPSIG(status);
     } else {
-        printf("El proceso con PID %d ha terminado de manera anormal\n", pid);
-        return  WTERMSIG(status); // Otra opción: return;
+        resultado.estado = EXIT_FAILURE;
     }
+
+    return resultado;
 }
+
+
+void MostrarEstadoPantalla(Proceso *l){
+    int state = obtenerEstadoProceso(l->pid).estado;
+    int signal =obtenerEstadoProceso(l->pid).senal;
+    int beforestate=l->state;
+    l->state=state;
+    uid_t uid = getuid();
+    printf("\t%d\t%s\tp=%d\t%d/%d/%d %02d:%02d:%02d", l->pid, getpwuid(uid)->pw_name, getpriority(PRIO_PROCESS,l->pid),
+           localtime(&l->data)->tm_mday, localtime(&l->data)->tm_mon,
+           localtime(&l->data)->tm_year + 1900, localtime(&l->data)->tm_hour, localtime(&l->data)->tm_min,
+           localtime(&l->data)->tm_sec);
+
+    if (beforestate==0 && state== 1)
+        l->state=beforestate;
+
+    switch (l->state) {
+        case -1:
+            printf(" ACTIVO (000) %s",l->commans_line);
+            break;
+        case 0:
+            printf(" TERMINADO (000) %s",l->commans_line);
+            break;
+        case 1:
+            printf(" SIGNALED (%d) %s", signal, l->commans_line);
+            break;
+        case 2:
+            printf(" STOPPED (%d) %s",signal,l->commans_line);
+            break;
+        default:
+            printf(" Erro inesperado al obtener el estado del proceso %d",l->pid);
+    }
+    printf("\n");
+}
+
 
 void MostrarJobs(listaProcesos listaProcesos1){
  Proceso *l;
     for (l= listaProcesos1; l != NULL  ; l=l->next) {
-        uid_t uid = getuid();
-        printf("%d\t%s\tp=%d\t%d/%d/%d %02d:%02d:%02d\t%d %s",l->pid,getpwuid(uid)->pw_name,l->prioridade,
-               localtime(&l->data)->tm_mday,localtime(&l->data)->tm_mon,
-               localtime(&l->data)->tm_year + 1900,localtime(&l->data)->tm_hour,localtime(&l->data)->tm_min,
-               localtime(&l->data)->tm_sec, obtener_estado_proceso(l->pid),l->commans_line);
+        MostrarEstadoPantalla(l);
+
     }
 }
 
 void VaciarListaProcesos(listaProcesos *listaProcesos1){
-    Proceso *l;
-    for (l= (Proceso *) listaProcesos1; l != NULL  ; l=l->next) {
-        free(l);
+    if ( listaProcesos1 != NULL) {
+        Proceso *l;
+        for (l = (Proceso *) listaProcesos1; l != NULL; l = l->next) {
+            free(l);
+        }
+        free(listaProcesos1);
     }
-    free(listaProcesos1);
+}
+
+void eliminarElementos(listaProcesos *cabeza, int condicion) {
+    Proceso *actual = *cabeza;
+    Proceso *anterior= *cabeza;
+
+    while (actual != NULL) {
+        if (obtenerEstadoProceso(actual->pid).estado == condicion) {
+            // El elemento cumple con la condición, se elimina
+            if (anterior == NULL) {
+                *cabeza = actual->next;
+            } else {
+                anterior->next = actual->next;
+            }
+
+            free(actual);
+            actual = (anterior == NULL) ? *cabeza : anterior->next;
+        } else {
+            // El elemento no cumple con la condición, se avanza
+            anterior = actual;
+            actual = actual->next;
+        }
+    }
 }
 
 
 
-void insertarListaProcesos(listaProcesos *lista,pid_t pid,int prioridade, char* commans_line){
-    Proceso *nuevoBloque = (Proceso * )malloc(sizeof(Proceso));
+
+void insertarListaProcesos(listaProcesos *lista, pid_t pid, int prioridade, char *commans_line[]) {
+    Proceso *nuevoBloque = (Proceso *)malloc(sizeof(Proceso));
     Proceso *temp2 = *lista;
 
     if (nuevoBloque == NULL) {
         fprintf(stderr, "Error: No se pudo asignar memoria para el nuevo proceso.\n");
         return;
     }
+    nuevoBloque->state=1;
+    nuevoBloque->pid = pid;
+    nuevoBloque->data = time(NULL);
 
-    nuevoBloque->pid=pid;
-    nuevoBloque->data =time(NULL);
-    nuevoBloque->prioridade=prioridade;
-    nuevoBloque->commans_line=commans_line;
+
+    // Concatenar los elementos del array en una sola cadena
+    int total_length = 0;
+    for (int i = 0; commans_line[i] != NULL; i++) {
+        total_length += strlen(commans_line[i]) + 1; // +1 para el espacio entre palabras
+    }
+
+    nuevoBloque->commans_line = (char *)malloc(total_length);
+    nuevoBloque->commans_line[0] = '\0'; // Inicializar la cadena
+
+    for (int i = 0; commans_line[i] != NULL; i++) {
+        strcat(nuevoBloque->commans_line, commans_line[i]);
+        strcat(nuevoBloque->commans_line, " ");
+    }
+
     nuevoBloque->next = NULL;
-
 
     if (*lista == NULL) {
         *lista = nuevoBloque;
     } else {
         // Encontrar el final de la lista
-        for (; temp2->next != NULL; temp2 =  temp2->next);
+        for (; temp2->next != NULL; temp2 = temp2->next);
         // Enlazar el nuevo bloque al final de la lista
         temp2->next = nuevoBloque;
     }
-
-    
 }
 
 void pid(char *argumentos[MAXARGS]) {
@@ -275,8 +374,10 @@ bool CombinarArrays(char *Destino[MAXARGS], char *String, char *Origen[MAXARGS])
 
     // Copiar elementos de Origen a Destino
     for (i = 0; Origen[i] != NULL && i < MAXARGS - 1; ++i) {
-        if (strcmp(Origen[i],"&")==0)
-            ESSP=true;
+        if (strcmp(Origen[i], "&") == 0){
+            ESSP = true;
+        break;
+    }
             Destino[i + 1] = Origen[i];
 
     }
@@ -300,28 +401,35 @@ void ComandoNonConocido(char *comando, char *argumentos[],listaProcesos *l) {
 
     if (pid == 0) {  // Proceso hijo
         execvp(comando, ComandoCorrecto);
-        insertarListaProcesos(l, getpid(), getpriority(PRIO_PROCESS,getpid()), (char *) ComandoCorrecto);
         perror("Error ejecutando el comando");
         exit(EXIT_FAILURE);
 
     } else {  // Proceso padre
-        waitpid(pid, NULL, 0);
+
+        if (!insertar)//Se non temos que insertalo na lista, é un proceso en primeiro plano, teño qeu esperar por el,
+            waitpid(pid, NULL, 0);
+        else
+            insertarListaProcesos(l, pid, getpriority(PRIO_PROCESS,getpid()), ComandoCorrecto);
+
+
     }
 
 }
 
-void EliminarJobs (char *argumentos[], listaProcesos *l){
 
-    if (strcmp(argumentos[0],"-term")){
+void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1){
+    if (argumentos[0]!=NULL && *listaProcesos1!=NULL) {
+        if (strcmp(argumentos[0], "-term")==0) {
+            eliminarElementos(listaProcesos1, 0);
 
+        }
+        else if (strcmp(argumentos[0], "-sig")==0) {
+            eliminarElementos( listaProcesos1, 2);
+        }
+        MostrarJobs(*listaProcesos1);
     }
-    if (strcmp(argumentos[0],"-sig")){
-
-    }
-    else
-        printf("No se ha introducido una función válida, por favor revisa el manual con help deljobs");
+    MostrarJobs(*listaProcesos1);
 
 }
-
 
 
