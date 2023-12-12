@@ -125,6 +125,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
             EliminarJobs(argumentos,p);
         else if (strcmp(argPpal,"showvar")==0)
             CmdShowvar(argumentos,environ);
+        else if (strcmp(argPpal,"job")==0)
+            job(argumentos,p);
         else 
             ComandoNonConocido(argPpal,argumentos,p);//Se non recoñecemos facemos o da terminal
     }
