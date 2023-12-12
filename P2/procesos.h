@@ -4,8 +4,12 @@
 #include "definicionsBase.h"
 #include <unistd.h>
 #include"sys/utsname.h"
+#include "historial.h"
+#include "ficheiros.h"
 #include <pwd.h>
 #include <sys/wait.h>
+
+#include "memoria.h"
 
 #define MAXVAR 5000
 
@@ -17,9 +21,9 @@ typedef struct SEN{
 typedef struct proceso{
     pid_t pid;
     time_t data;
-    int estado;
-    int prioridade;
-    pid_t commans_line;
+    int state;
+    int senal;
+    char *commans_line;
     struct proceso *next;
 } Proceso;
 
@@ -27,10 +31,12 @@ typedef Proceso *listaProcesos;
 
 
 void crearListaProcesos(listaProcesos *t);
+void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1);
 
 void pid(char* argumentos[MAXARGS]);
 void infosys();
 void uid(char *argumentos[]);
-void ComandoNonConocido(char* ArgPpal , char* arguentos[MAXARGS]);
+void ComandoNonConocido(char* ArgPpal , char* arguentos[MAXARGS], listaProcesos *l);
+void MostrarJobs(listaProcesos listaProcesos1);
 
 #endif
