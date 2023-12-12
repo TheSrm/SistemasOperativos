@@ -473,4 +473,34 @@ void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1){
 
 }
 
+void job (char *argumentos[], listaProcesos *listaProcesos1){
+    if (argumentos[0]==NULL)
+        MostrarJobs(*listaProcesos1);
+    else{
+
+        if (strcmp(argumentos[0],"-fg")==0) {
+            int State;
+            long PID=strtol(argumentos[1], NULL, 10);
+             waitpid(PID, &State, 0);
+
+             if(State==NULL) {
+                 State = 0;
+             }
+
+            printf("Proceso %ld terminado. Valor %d devuelto\n", PID, State);
+
+        }else{
+            Proceso *l;
+            long PID=strtol(argumentos[0], NULL, 10);
+            for (l= *listaProcesos1; l != NULL && l->pid!=PID  ; l=l->next);
+            if (l==NULL)
+                printf("Non se meteu un pid dun proceso adecuado\n");
+            else
+                MostrarEstadoPantalla(l);
+        }
+    }
+}
+
+
+
 
