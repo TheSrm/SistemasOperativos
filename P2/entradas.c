@@ -1,6 +1,6 @@
 #include "entradas.h"
 
-//Función encargada de error a shell, cando o usuario o indique, cambiando o valor de rematado
+//Función encargada de pechar a shell, cando o usuario o indique, cambiando o valor de rematado
 void shutDown (bool* rematado){
     *rematado = true;
 }
@@ -12,7 +12,8 @@ void lerEntrada(char *entrada, historial* h) {
         printf("Erro ao insertar o comando no historial");//Indicamos o erro e seguimos
 }
 //Repetimos un comando cuxa posición na lista sexa a indicada
-void repetirComando(char **argumentos, historial *h, taboaFicheiros *t, listaBloques *l,listaProcesos *p){
+void repetirComando(char **argumentos, historial *h, taboaFicheiros *t,
+                    listaBloques *l,listaProcesos *p, char *environ[]){
     int repe = atoi(argumentos[0]), i;//Inicializamos variables para comprobar funcionamento correcto
     historial hAux; // hAux: copia estática do historial actual
 
@@ -29,11 +30,12 @@ void repetirComando(char **argumentos, historial *h, taboaFicheiros *t, listaBlo
         printf("Para evitar bucles infinitos non se pode chamar a un 'comand' con outro\n");//Imprimimos unha mensaxe indicandoo e voltamos ao bucle
         return;
     }
-    procesarEntrada(hAux->comando, h, false, t, l,p);//Se ningunha das condicions anteriores fallou, repetimos o comando indicado
+    procesarEntrada(hAux->comando, h, false, t, l,p, environ);//Se ningunha das condicions anteriores fallou, repetimos o comando indicado
 }
 
 //Troceamos o comando en argPpal, donde se garda o comando e argumentos[], donde gardaremos os argumentos de cada comando
-void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques *l, listaProcesos *p) {
+void procesarEntrada(char *entrada, historial* h, bool* rematado,
+                     taboaFicheiros *t, listaBloques *l, listaProcesos *p, char *env[]) {
     int i;//Creamos as variables necesarias para o correcto funcionamento da función
     char *argPpal, *argumentos[MAXARGS];
 
@@ -44,6 +46,7 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
     //Sempre que exista un argumento principal, pasamolo por este conxunto de ifs, que comparará con cada un dos comandos existentes
     // e executará o correcto, nalguns casos, diferentes argumentos teñen diferentes funcións, polo que tamen compararemos con argumentos
     if (argPpal != NULL) {
+        // básicos
         if (strcmp(argPpal, "time") == 0)
             imprHora();
         else if (strcmp(argPpal, "date") == 0)
@@ -83,7 +86,7 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
         else if (strcmp(argPpal,"help") == 0)
             axudaComando(argumentos[0]);
         else if(strcmp(argPpal,"comand")== 0)
-            repetirComando(argumentos, h, t, l,p);
+            repetirComando(argumentos, h, t, l,p, environ);
         else if(strcmp(argPpal,"delete")==0)
             borrarFicheiros(argumentos,false);
         else if(strcmp(argPpal,"deltree")==0)
@@ -94,30 +97,36 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros
             listarFicheiros(argumentos, 0, 0);
         else if (strcmp(argPpal, "stat") == 0)
             stats(argumentos);
+        // memoria
         else if (strcmp(argPpal,"malloc")==0)
-            memAlloc(l,argumentos);//Probado, sen memory leaks
+            memAlloc(l,argumentos);
         else if (strcmp(argPpal,"recurse")==0)
-            recurse(argumentos);//Probado, sen memory leaks
+            recurse(argumentos);
         else if (strcmp(argPpal,"read")==0)
-            CmdRead(argumentos); // Funciona, probas básicas
+            CmdRead(argumentos);
         else if (strcmp(argPpal,"memfill")==0)
-            memfill(argumentos); // Funciona, probas básicas
-       // else if (strcmp(argPpal,"mem")==0)
-           // mem(*l); // Funciona, repetía shared 2 veces
+            memfill(argumentos);
         else if (strcmp(argPpal,"write")==0)
-            CmdWrite(argumentos); // Funciona, probas básicas. Mirar que pasa con /0
+            CmdWrite(argumentos);
         else if (strcmp(argPpal,"shared")==0)
-            sharedMemory(argumentos, l);//Probado, sen memory leaks
+            sharedMemory(argumentos, l);
         else if (strcmp(argPpal,"mmap")==0)
             MemoryMap(argumentos,l);
         else if (strcmp(argPpal,"memdump")==0)
             CmdMemdump(argumentos);
         else if (strcmp(argPpal,"mem")==0)
             mem(argumentos,*l);
+        // procesos
         else if (strcmp(argPpal,"uid")==0)
             uid(argumentos);
+        else if (strcmp(argPpal,"jobs")==0)
+            MostrarJobs(*p);
+        else if (strcmp(argPpal,"deljobs")==0)
+            EliminarJobs(argumentos,p);
+        else if (strcmp(argPpal,"showvar")==0)
+            CmdShowvar(argumentos,environ);
         else 
-            ComandoNonConocido(argPpal,argumentos);//Se non recoñecemos facemos o da terminal
+            ComandoNonConocido(argPpal,argumentos,p);//Se non recoñecemos facemos o da terminal
     }
 
 }

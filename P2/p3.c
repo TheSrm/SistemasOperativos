@@ -7,7 +7,7 @@ void imprPrompt(){
     printf("$:- ");
 }
 
-int main(){
+int main(int argc, char *argv[], char *envp[]){
     bool rematado = false;
     char* entrada = malloc(256);
     historial h = crearHistBaleiro();
@@ -22,7 +22,7 @@ int main(){
     while (!rematado){
         imprPrompt();
         lerEntrada(entrada, &h);
-        procesarEntrada(entrada, &h, &rematado, &t,&l,&p);
+        procesarEntrada(entrada, &h, &rematado, &t,&l,&p,envp);
     }
     return 0;
 }

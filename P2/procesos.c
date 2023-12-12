@@ -1,15 +1,14 @@
 #include <signal.h>
 #include <time.h>
+#include <unistd.h>
 #include <sys/resource.h>
-
-
-
 #include "procesos.h"
 
 void crearListaProcesos(listaProcesos *lista){
     *lista=NULL;
 }
 
+extern char **environ;
 
 static  struct SEN sigstrnum[] = {
         {"HUP", SIGHUP},
@@ -358,6 +357,22 @@ int BuscarVariable (char * var, char *e[])  /*busca una variable en el entorno q
             pos++;
     errno=ENOENT;   /*no hay tal variable*/
     return(-1);
+}
+
+void CmdShowvar(char *argumentos[], char *env[]){
+    int n_env = BuscarVariable(argumentos[0],env),
+    n_environ = BuscarVariable(argumentos[0],environ);
+    char *g_env = getenv(argumentos[0]);
+    if(n_env != -1 && n_environ != -1 && g_env != NULL)
+        printf("Environ: %s\narg3: %s\ngetenv: %s\n",environ[n_environ], env[n_env], g_env);
+}
+void CmdShowenv(char *argumentos[], char *env[]){
+    if(argumentos[0]==NULL || (strcmp(argumentos[0],"-addr")!=0 && strcmp(argumentos[0],"-environ")!=0))
+        // imprimir con arg3
+    else if (strcmp(argumentos[0],"-environ")==0)
+        // imprimir con environ
+    else
+        // imprimir direccións de arg3 e environ
 }
 
 int CambiarVariable(char * var, char * valor, char *e[]) /*cambia una variable en el entorno que se le pasa como parámetro*/

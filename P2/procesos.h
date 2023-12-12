@@ -2,7 +2,6 @@
 #define PROCESOS_H
 
 #include "definicionsBase.h"
-#include <unistd.h>
 #include"sys/utsname.h"
 #include "historial.h"
 #include "ficheiros.h"
@@ -32,11 +31,12 @@ typedef Proceso *listaProcesos;
 
 void crearListaProcesos(listaProcesos *t);
 void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1);
-
+void CmdShowvar(char *argumentos[], char *env[]);
+void CmdShowenv(char *argumentos[], char *env[]);
 void pid(char* argumentos[MAXARGS]);
 void infosys();
 void uid(char *argumentos[]);
-void ComandoNonConocido(char* ArgPpal , char* arguentos[MAXARGS], listaProcesos *l);
+void ComandoNonConocido(char* ArgPpal , char* argumentos[MAXARGS], listaProcesos *l);
 void MostrarJobs(listaProcesos listaProcesos1);
 
 #endif

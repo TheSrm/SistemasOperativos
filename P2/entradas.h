@@ -11,6 +11,7 @@
 
 
 void lerEntrada(char* entrada, historial* h);
-void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t, listaBloques *l, listaProcesos *p);
+void procesarEntrada(char *entrada, historial* h, bool* rematado, taboaFicheiros *t,
+                     listaBloques *l, listaProcesos *p, char *arg3[]);
 
 #endif
