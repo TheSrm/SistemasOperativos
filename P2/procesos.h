@@ -28,7 +28,7 @@ typedef struct proceso{
 
 typedef Proceso *listaProcesos;
 
-
+void job (char *argumentos[], listaProcesos *listaProcesos1);
 void crearListaProcesos(listaProcesos *t);
 void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1);
 void CmdShowvar(char *argumentos[], char *env[]);
