@@ -501,9 +501,9 @@ void job (char *argumentos[], listaProcesos *listaProcesos1){
     else{
 
         if (strcmp(argumentos[0],"-fg")==0) {
-            int State;
+            int *State;
             pid_t PID=strtol(argumentos[1], NULL, 10);
-             waitpid(PID, &State, 0);
+             waitpid(PID, State, 0);
 
              if(State==NULL) {
                  State = 0;
