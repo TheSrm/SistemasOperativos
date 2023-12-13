@@ -131,7 +131,18 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
             CmdChangevar(argumentos,env);
         else if (strcmp(argPpal,"job")==0)
             job(argumentos,p);
-        else 
+        else if (strcmp(argPpal,"exec")==0) {
+            Exec(argumentos);
+            shutDown(rematado);
+            free(entrada);
+            borrarHist(h);
+            fflush(stdin);
+            free(*h);
+            pecharTodoFicheiro(t);
+            free(*t);
+            pecharTodoBloque(l);
+
+        }else
             ComandoNonConocido(argPpal,argumentos,p);//Se non recoñecemos facemos o da terminal
     }
 
