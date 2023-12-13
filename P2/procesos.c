@@ -367,12 +367,17 @@ void CmdShowvar(char *argumentos[], char *env[]){
         printf("Environ: %s\narg3: %s\ngetenv: %s\n",environ[n_environ], env[n_env], g_env);
 }
 void CmdShowenv(char *argumentos[], char *env[]){
+    int i;
     if(argumentos[0]==NULL || (strcmp(argumentos[0],"-addr")!=0 && strcmp(argumentos[0],"-environ")!=0))
-        // imprimir con arg3
+        for(i = 0; env[i] != NULL; i++)
+            printf("%s\n",env[i]);
     else if (strcmp(argumentos[0],"-environ")==0)
-        // imprimir con environ
+        for(i = 0; env[i] != NULL; i++)
+            printf("%s\n",environ[i]);
     else
-        // imprimir direccións de arg3 e environ
+        printf("Direccion arg3: %p\n"
+               "Direccion environ: %p\n",
+               &env,&environ);
 }
 
 int CambiarVariable(char * var, char * valor, char *e[]) /*cambia una variable en el entorno que se le pasa como parámetro*/
@@ -480,7 +485,7 @@ void job (char *argumentos[], listaProcesos *listaProcesos1){
 
         if (strcmp(argumentos[0],"-fg")==0) {
             int State;
-            long PID=strtol(argumentos[1], NULL, 10);
+            pid_t PID=strtol(argumentos[1], NULL, 10);
              waitpid(PID, &State, 0);
 
              if(State==NULL) {

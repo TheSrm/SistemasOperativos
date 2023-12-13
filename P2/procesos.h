@@ -12,7 +12,7 @@
 
 #define MAXVAR 5000
 
-typedef struct SEN{
+ struct SEN{
     char *nombre;
     int senal;
 };

@@ -86,7 +86,7 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
         else if (strcmp(argPpal,"help") == 0)
             axudaComando(argumentos[0]);
         else if(strcmp(argPpal,"comand")== 0)
-            repetirComando(argumentos, h, t, l,p, environ);
+            repetirComando(argumentos, h, t, l,p, env);
         else if(strcmp(argPpal,"delete")==0)
             borrarFicheiros(argumentos,false);
         else if(strcmp(argPpal,"deltree")==0)
@@ -124,7 +124,9 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
         else if (strcmp(argPpal,"deljobs")==0)
             EliminarJobs(argumentos,p);
         else if (strcmp(argPpal,"showvar")==0)
-            CmdShowvar(argumentos,environ);
+            CmdShowvar(argumentos,env);
+        else if (strcmp(argPpal,"showenv")==0)
+            CmdShowenv(argumentos,env);
         else if (strcmp(argPpal,"job")==0)
             job(argumentos,p);
         else 
