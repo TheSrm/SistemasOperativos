@@ -131,6 +131,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
             CmdChangevar(argumentos,env);
         else if (strcmp(argPpal,"job")==0)
             job(argumentos,p);
+        else if (strcmp(argPpal,"fork")==0)
+        Cmd_fork (argumentos , p);
         else if (strcmp(argPpal,"exec")==0) {
             Exec(argumentos);
             shutDown(rematado);

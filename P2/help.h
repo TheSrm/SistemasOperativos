@@ -1,7 +1,7 @@
 #ifndef HELP_H
 #define HELP_H
 
-#define NUMCOMANDOS 30
+#define NUMCOMANDOS 40
 
 typedef struct descrComando{
     char* nome;

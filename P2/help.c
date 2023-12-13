@@ -68,9 +68,37 @@ void imprimirComando(char* cmd){
         printf("memfill addr cont byte \tENche a memoria a partir de addr (cont bytes) da posicion de memoria addr\n");
     else if (strcmp(cmd,"recurse")==0)
         printf("recurse [n]\tInvoca a funcion recursiva n veces\n");
-
-
-
+    else if (strcmp(cmd,"uid")==0)
+        printf("uid [-get|-set] [-l] [id] \t Accede ás credenciais do proceso que executa o shell\n"
+               "\t-get: mostra as credenciais"
+               "\t-set id: establece a credencial ao valor numerico id\n"
+               "\t-set -l id: establece a credencial a login id\n");
+    else if (strcmp(cmd,"showvar")==0)
+        printf("Mostra o valor dunha variable de entorno e as direccións\n");
+    else if (strcmp(cmd,"changevar")==0)
+        printf("changevar [-a|-e|-p] var valor\tCambia o valor dunha variable de entorno\n"
+               "\t-a: accede polo  terceiro arg de main\n"
+               "\t-e: accede mediante environ\n"
+               "\t-p: accede mediante putenv\n");
+    else if (strcmp(cmd,"subsvar")==0)
+        printf("subsvar [-a|-e] var1 var2 valor\tSustitue a variable de entorno var1\n"
+               "\tcon var2=valor\n"
+               "\t-a: accede polo terceiro arg de main\n"
+               "\t-e: accede mediante environ\n");
+    else if (strcmp(cmd,"showenv")==0)
+        printf("showenv [-environ|-addr] \t Mostra o entorno do proceso\n"
+               "\t-environ: accede usando environ (no lugar do terceiro arg de main)\n"
+               "\t-addr: mostra o  valor e donde se almacenan environ e o 3er arg main\n ");
+    else if (strcmp(cmd,"fork")==0)
+        printf("Fai fork e queda esperando que seu fillo acabe\n");
+    else if (strcmp(cmd,"exec")==0)
+        printf("Executa sen crear un proceso un programa con argumentos nun entorno uqe so conten VAR1 ,VAR2....\n");
+    else if (strcmp(cmd,"job")==0)
+        printf("Mostra información dun proceso e con -fg pasao a primeiro plano\n");
+    else if (strcmp(cmd,"jobs")==0)
+        printf("Mostra a informacion dos procesos en segundo plano\n");
+    else if (strcmp(cmd,"deljobs")==0)
+        printf("Borra da lista de procesos os procesos terminados con -term ou sinalados con -sig\n");
     else
         printf("Ese comando non existe\n");
 }
@@ -81,7 +109,9 @@ void axudaComando(char* cmd){
                                       "open","close","dup","listopen","infosys","help","quit",
                                       "exit","bye","create","stat","list","delete","deltree",
                                       "malloc","shared","mmap","read","write","memdump",
-                                      "memfill","mem","recurse"};
+                                      "memfill","mem","recurse", "uid","showvar","changevar","subsvar","showenv",
+                                      "fork","exec","job","jobs","deljobs"};
+
     if(cmd==NULL)
         for(i=0; i<NUMCOMANDOS; i++)
             printf("Comando %d: %s\n", i, nomesComandos[i]);

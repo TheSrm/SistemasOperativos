@@ -204,14 +204,17 @@ void MostrarJobs(listaProcesos listaProcesos1){
     }
 }
 
-void VaciarListaProcesos(listaProcesos *listaProcesos1){
-    if ( listaProcesos1 != NULL) {
-        Proceso *l;
-        for (l = (Proceso *) listaProcesos1; l != NULL; l = l->next) {
-            free(l);
-        }
-        free(listaProcesos1);
+void VaciarListaProcesos(listaProcesos *cabeza) {
+    Proceso *actual = *cabeza;
+    Proceso *siguiente = NULL;  // Cambié el nombre de 'anterior' a 'siguiente'
+
+    while (actual != NULL) {
+        siguiente = actual->next;
+        free(actual);
+        actual = siguiente;
     }
+
+    *cabeza = NULL;  // Después de vaciar la lista, la cabeza debe ser NULL
 }
 
 void eliminarElementos(listaProcesos *cabeza, int condicion) {
@@ -219,12 +222,8 @@ void eliminarElementos(listaProcesos *cabeza, int condicion) {
     Proceso *anterior = NULL;  // Inicializar anterior a NULL
 
     while (actual != NULL) {
-        int beforestate = actual->state;
         int actualP = obtenerEstadoProceso(actual).estado;
 
-        if (beforestate == 1 && actualP == 0) {
-            actualP = beforestate;
-        }
 
         if (actualP == condicion) {
             // El elemento cumple con la condición, se elimina
@@ -449,11 +448,9 @@ bool CombinarArrays(char *Destino[MAXARGS], char *String, char *Origen[MAXARGS])
     return ESSP;
 }
 
-
-void ComandoNonConocido(char *comando, char *argumentos[], listaProcesos *l) {
-
+void ComandoNonConocido(char *comando, char *argumentos[],listaProcesos *l) {
     char* ComandoCorrecto[MAXARGS];
-    bool insertar = CombinarArrays(ComandoCorrecto, comando, argumentos);
+    bool insertar=CombinarArrays(ComandoCorrecto,comando,argumentos);//Necesitamos poñer o comando 2 veces en Comando correcto, por lagunha razón que debe ser así
 
     pid_t pid = fork();
 
@@ -463,22 +460,20 @@ void ComandoNonConocido(char *comando, char *argumentos[], listaProcesos *l) {
     }
 
     if (pid == 0) {  // Proceso hijo
-        printf("\n");
         execvp(comando, ComandoCorrecto);
-        // Si execvp tiene éxito, no se ejecutará esta línea
         perror("Error ejecutando el comando");
         exit(EXIT_FAILURE);
 
     } else {  // Proceso padre
-        int status;
-        waitpid(pid, &status, WNOHANG);
-        // Verificar si el proceso hijo terminó correctamente
-        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-            if (insertar) {
-                insertarListaProcesos(l, pid, getpriority(PRIO_PROCESS, getpid()), ComandoCorrecto);
-            }
-        }
+
+        if (!insertar)//Se non temos que insertalo na lista, é un proceso en primeiro plano, teño qeu esperar por el,
+            waitpid(pid, NULL, 0);
+        else
+            insertarListaProcesos(l, pid, getpriority(PRIO_PROCESS,getpid()), ComandoCorrecto);
+
+
     }
+
 }
 
 
