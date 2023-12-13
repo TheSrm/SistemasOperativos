@@ -127,6 +127,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
             CmdShowvar(argumentos,env);
         else if (strcmp(argPpal,"showenv")==0)
             CmdShowenv(argumentos,env);
+        else if (strcmp(argPpal,"changevar")==0)
+            CmdChangevar(argumentos,env);
         else if (strcmp(argPpal,"job")==0)
             job(argumentos,p);
         else 

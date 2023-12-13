@@ -359,16 +359,10 @@ int BuscarVariable (char * var, char *e[])  /*busca una variable en el entorno q
     return(-1);
 }
 
-void CmdShowvar(char *argumentos[], char *env[]){
-    int n_env = BuscarVariable(argumentos[0],env),
-    n_environ = BuscarVariable(argumentos[0],environ);
-    char *g_env = getenv(argumentos[0]);
-    if(n_env != -1 && n_environ != -1 && g_env != NULL)
-        printf("Environ: %s\narg3: %s\ngetenv: %s\n",environ[n_environ], env[n_env], g_env);
-}
+
 void CmdShowenv(char *argumentos[], char *env[]){
     int i;
-    if(argumentos[0]==NULL || (strcmp(argumentos[0],"-addr")!=0 && strcmp(argumentos[0],"-environ")!=0))
+    if(argumentos == NULL || argumentos[0]==NULL || (strcmp(argumentos[0],"-addr")!=0 && strcmp(argumentos[0],"-environ")!=0))
         for(i = 0; env[i] != NULL; i++)
             printf("%s\n",env[i]);
     else if (strcmp(argumentos[0],"-environ")==0)
@@ -378,6 +372,20 @@ void CmdShowenv(char *argumentos[], char *env[]){
         printf("Direccion arg3: %p\n"
                "Direccion environ: %p\n",
                &env,&environ);
+}
+
+void CmdShowvar(char *argumentos[], char *env[]){
+    int n_env, n_environ;
+    char *g_env;
+    if(argumentos[0]==NULL)
+        CmdShowenv(NULL, env);
+    else{
+        n_env = BuscarVariable(argumentos[0], env),
+                n_environ = BuscarVariable(argumentos[0], environ);
+        g_env = getenv(argumentos[0]);
+        if (n_env != -1 && n_environ != -1 && g_env != NULL)
+            printf("Environ: %s\narg3: %s\ngetenv: %s\n", environ[n_environ], env[n_env], g_env);
+    }
 }
 
 int CambiarVariable(char * var, char * valor, char *e[]) /*cambia una variable en el entorno que se le pasa como parámetro*/
@@ -397,10 +405,22 @@ int CambiarVariable(char * var, char * valor, char *e[]) /*cambia una variable e
     return (pos);
 }
 
-/*las siguientes funciones nos permiten obtener el nombre de una senal a partir
-del número y viceversa */
-
-
+void CmdChangevar(char *argumentos[], char *env[]){
+    char* e_var = malloc(512);
+    if(argumentos[0]!=NULL && argumentos[2]!=NULL) {
+        if (strcmp(argumentos[0], "-a") == 0)
+            CambiarVariable(argumentos[1], argumentos[2], env);
+        else if (strcmp(argumentos[0], "-e") == 0)
+            CambiarVariable(argumentos[1], argumentos[2], environ);
+        else if (strcmp(argumentos[0], "-p") == 0){
+            sprintf(e_var, "%s=%s", argumentos[1], argumentos[2]);
+            putenv(e_var); // na shell de referencia non comproban se existe, asi que aquí tampouco
+            free(e_var); // pode que non faga falta ou dea erro
+        }
+    }
+    else
+        printf("Uso: changevar [-a|-e|-p] var valor\n");
+}
 
 bool CombinarArrays(char *Destino[MAXARGS], char *String, char *Origen[MAXARGS]) {
     int i;
