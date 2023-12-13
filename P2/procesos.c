@@ -529,12 +529,9 @@ void job (char *argumentos[], listaProcesos *listaProcesos1){
 }
 
  void Exec ( char *argumentos[MAXARGS]){
-     printf("\n");
      execvp(argumentos[0],argumentos);
      perror("Error ejecutando el comando");
      exit(EXIT_FAILURE);
-
-
  }
 
 
