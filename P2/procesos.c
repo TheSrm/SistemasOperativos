@@ -205,7 +205,9 @@ void MostrarEstadoPantalla(Proceso *l) {
             printf(" ACTIVO (000) %s", l->commans_line);
             break;
         default:
-            printf(" Error inesperado al obtener el estado del proceso %d", l->pid);
+            printf(" TERMINADO (255)");
+            l->state=10;
+            break;
     }
 
     printf("\n");
@@ -530,6 +532,7 @@ void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1){
     if (argumentos[0]!=NULL && *listaProcesos1!=NULL) {
         if (strcmp(argumentos[0], "-term")==0) {
             eliminarElementos(listaProcesos1, 0);
+            eliminarElementos(listaProcesos1, 10);
 
         }
         else if (strcmp(argumentos[0], "-sig")==0) {
@@ -540,6 +543,24 @@ void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1){
 
 }
 
+void eliminarBloquePorPID(listaProcesos *cabeza, int pidAEliminar) {
+    Proceso *actual = *cabeza;
+    Proceso *anterior = NULL;
+
+    while (actual != NULL && actual->pid != pidAEliminar) {
+        anterior = actual;
+        actual = actual->next;
+    }
+
+    if (actual != NULL) {
+        if (anterior != NULL) {
+            anterior->next = actual->next;
+        } else {
+            *cabeza = actual->next;
+        }
+        free(actual);
+    }
+}
 void job (char *argumentos[], listaProcesos *listaProcesos1){
     if (argumentos[0]==NULL)
         MostrarJobs(*listaProcesos1);
@@ -548,13 +569,14 @@ void job (char *argumentos[], listaProcesos *listaProcesos1){
         if (strcmp(argumentos[0],"-fg")==0) {
             int *State;
             pid_t PID=strtol(argumentos[1], NULL, 10);
+            eliminarBloquePorPID(listaProcesos1,PID);
              waitpid(PID, State, 0);
 
              if(State==NULL) {
                  State = 0;
              }
 
-            printf("Proceso %ld terminado. Valor %d devuelto\n", PID, State);
+            printf("Proceso %d terminado. Valor %d devuelto\n", PID, *State);
 
         }else{
             Proceso *l;

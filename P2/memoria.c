@@ -109,8 +109,9 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
     nuevoBloque->tamanoBloque = tamanoBloque;
     nuevoBloque->tipoAsignacion = tipoAsignacion;
     nuevoBloque->nombreDocumento=NULL;
+    char * name = strdup(nombre);
     if (nombre != NULL) {
-        nuevoBloque->nombreDocumento = strdup(nombre);
+        nuevoBloque->nombreDocumento=name;
         if (nuevoBloque->nombreDocumento == NULL) {
             perror("Error al duplicar la cadena");
             free(nuevoBloque);
@@ -142,6 +143,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
             // Enlazar el nuevo bloque al final de la lista
             temp2->next = (struct bloqueMemoria *) nuevoBloque;
         }
+
 
 }
 
