@@ -104,18 +104,34 @@ char *NombreSenal(int sen)  /*devuelve el nombre senal a partir de la senal*/
 typedef struct {
     int estado;
     int senal;
+    bool Senalado;
 } EstadoProceso;
 
 EstadoProceso obtenerEstadoProceso(Proceso *l) {
     EstadoProceso resultado = {0, 0};
     int status;
 
+
+
     // Esperar a que el proceso hijo termine (modo no bloqueante)
-    pid_t result = waitpid(l->pid, &status, WNOHANG);
+    pid_t result = waitpid(l->pid, &status, WNOHANG | WUNTRACED | WCONTINUED);
+
+    if (l->state==2 && !WIFCONTINUED(status)) {
+        resultado.senal =l->senal;
+        resultado.estado=l->state;
+        return resultado;
+    }
+    if (l->state==2 && WIFCONTINUED(status)) {
+        resultado.senal=0;
+        resultado.estado=-1;
+        return resultado;
+    }
+
+
 
     if (result == 0) {
         // El proceso hijo aún no ha terminado
-        resultado.estado = -1;
+        resultado.estado = -1;  // Mantenemos el valor original
         return resultado;
     } else if (result == -1) {
         resultado.estado = l->state;
@@ -125,27 +141,32 @@ EstadoProceso obtenerEstadoProceso(Proceso *l) {
 
     resultado.estado = status;
 
+    // Conservar la señal anterior si la señal obtenida es nula
+
+
     // Verificar el estado del proceso hijo
     if (WIFEXITED(status)) {
         resultado.senal = WEXITSTATUS(status);
-        l->senal=resultado.senal;
+        l->senal = resultado.senal;
     } else if (WIFSIGNALED(status)) {
         resultado.estado = 1;  // Estado diferente de cero para indicar que se terminó por señal
         resultado.senal = WTERMSIG(status);
-        l->senal=resultado.senal;
+        l->senal = resultado.senal;
     } else if (WIFSTOPPED(status)) {
         resultado.estado = 2;
         resultado.senal = WSTOPSIG(status);
-        l->senal=resultado.senal;// Estado diferente de cero para indicar que se detuvo por señal
+        l->senal = resultado.senal;
     } else {
         resultado.estado = EXIT_FAILURE;
     }
 
-   // Conservar la señal anterior si la señal obtenida es nula
-    if (resultado.senal == 0 || strcmp(NombreSenal(resultado.senal),"SIGUNKNOWN")==0) {
+    if (resultado.senal == 0 || strcmp(NombreSenal(resultado.senal), "SIGUNKNOWN") == 0) {
         resultado.senal = l->senal;
-        l->senal=resultado.senal;
+        l->senal = resultado.senal;
     }
+
+
+
     return resultado;
 }
 
@@ -153,13 +174,12 @@ EstadoProceso obtenerEstadoProceso(Proceso *l) {
 void MostrarEstadoPantalla(Proceso *l) {
     EstadoProceso estadoProceso = obtenerEstadoProceso(l);
     int state = estadoProceso.estado;
-    int beforestate = l->state;
-    l->state = state;  // Se asume que esta asignación es necesaria, ajusta según tus necesidades.
+    l->state = state;
     uid_t uid = getuid();
 
     struct passwd *user_info = getpwuid(uid);
     if (user_info != NULL) {
-        printf("\t%d\t%s\tp=%d\t%d/%d/%d %02d:%02d:%02d", l->pid, user_info->pw_name,
+        printf("\t%d\t%s\tp=%d \t%d/%d/%d %02d:%02d:%02d", l->pid, user_info->pw_name,
                getpriority(PRIO_PROCESS, l->pid), localtime(&l->data)->tm_mday,
                localtime(&l->data)->tm_mon, localtime(&l->data)->tm_year + 1900,
                localtime(&l->data)->tm_hour, localtime(&l->data)->tm_min,
@@ -167,25 +187,22 @@ void MostrarEstadoPantalla(Proceso *l) {
     } else {
         // Manejar el caso en el que no se puede obtener la información del usuario
         fprintf(stderr, "Error al obtener información del usuario.\n");
-        return;  // O manejar el error de otra manera según tus necesidades.
+        return;
     }
 
-    if (beforestate == 0 && state == 1) {
-        l->state = beforestate;
-    }
 
     switch (estadoProceso.estado) {
-        case -1:
-            printf(" ACTIVO (000) %s", l->commans_line);
+        case 1:
+            printf(" SIGNALED (%s) %s", NombreSenal(estadoProceso.senal), l->commans_line);
             break;
         case 0:
             printf(" TERMINADO (000) %s", l->commans_line);
             break;
-        case 1:
-            printf(" SIGNALED (%s) %s", NombreSenal(estadoProceso.senal), l->commans_line);
-            break;
         case 2:
-            printf(" STOPPED (%s) %s", NombreSenal(estadoProceso.senal), l->commans_line);
+            printf(" STOPPED (0%d) %s", estadoProceso.senal, l->commans_line);
+            break;
+        case -1:
+            printf(" ACTIVO (000) %s", l->commans_line);
             break;
         default:
             printf(" Error inesperado al obtener el estado del proceso %d", l->pid);
@@ -481,16 +498,17 @@ void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1){
     if (argumentos[0]==NULL)
         MostrarJobs(*listaProcesos1);
 
+    MostrarJobs(*listaProcesos1);
+
     if (argumentos[0]!=NULL && *listaProcesos1!=NULL) {
         if (strcmp(argumentos[0], "-term")==0) {
             eliminarElementos(listaProcesos1, 0);
-            MostrarJobs(*listaProcesos1);
 
         }
         else if (strcmp(argumentos[0], "-sig")==0) {
             eliminarElementos( listaProcesos1, 1);
         }
-        MostrarJobs(*listaProcesos1);
+
     }
 
 }

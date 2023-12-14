@@ -7,6 +7,8 @@ void shutDown (bool* rematado){
 
 //Función encargada de ler a entrada do usuario
 void lerEntrada(char *entrada, historial* h) {
+
+
     fgets(entrada, ENTRADA_MAX, stdin);//Conseguimos a entrada
     if(!insertHist(entrada, h))//Se non a podemos insertar no historial por erro na función createnode
         printf("Erro ao insertar o comando no historial");//Indicamos o erro e seguimos
