@@ -422,20 +422,47 @@ int CambiarVariable(char * var, char * valor, char *e[]) /*cambia una variable e
 }
 
 void CmdChangevar(char *argumentos[], char *env[]){
-    char* e_var = malloc(512);
+    char* e_var;
     if(argumentos[0]!=NULL && argumentos[2]!=NULL) {
-        if (strcmp(argumentos[0], "-a") == 0)
-            CambiarVariable(argumentos[1], argumentos[2], env);
-        else if (strcmp(argumentos[0], "-e") == 0)
-            CambiarVariable(argumentos[1], argumentos[2], environ);
-        else if (strcmp(argumentos[0], "-p") == 0){
-            sprintf(e_var, "%s=%s", argumentos[1], argumentos[2]);
-            putenv(e_var); // na shell de referencia non comproban se existe, asi que aquí tampouco
-            free(e_var); // pode que non faga falta ou dea erro
+        if (strcmp(argumentos[0], "-a") == 0) {
+            if (CambiarVariable(argumentos[1], argumentos[2], env) == -1)
+                perror("Erro ao cambiar o valor da variable");
         }
+        else if (strcmp(argumentos[0], "-e") == 0){
+            if(CambiarVariable(argumentos[1], argumentos[2], environ)==-1)
+                perror("Erro ao cambiar o valor da variable");
+
+        }
+        else if (strcmp(argumentos[0], "-p") == 0){
+            e_var = malloc(strlen(argumentos[1])+ strlen(argumentos[2])+2);
+            sprintf(e_var, "%s=%s", argumentos[1], argumentos[2]);
+            if(putenv(e_var)!=0)
+                perror("Erro ao cambiar o valor da variable");
+        } else printf("Uso: changevar [-a|-e|-p] var valor\n");
     }
     else
         printf("Uso: changevar [-a|-e|-p] var valor\n");
+}
+
+void CmdSubsvar(char *argumentos[], char *env[]){
+    char *e_var;
+    int pos;
+    if(argumentos[3]!=NULL){
+        e_var = malloc(strlen(argumentos[2])+ strlen(argumentos[3])+2);
+        sprintf(e_var, "%s=%s", argumentos[2], argumentos[3]);
+        if(strcmp(argumentos[0],"-a")==0){
+            if((pos=BuscarVariable(argumentos[1],env))==-1)
+                perror("Variable non atopada");
+            else
+                env[pos] = e_var;
+        } else if(strcmp(argumentos[0],"-a")==0){
+            if((pos=BuscarVariable(argumentos[1],environ))==-1)
+                perror("Variable non atopada");
+            else
+                environ[pos] = e_var;
+        } else printf("Uso: subsvar [-a|-e] var1 var2 valor\n");
+    } else
+        printf("Uso: subsvar [-a|-e] var1 var2 valor\n");
 }
 
 bool CombinarArrays(char *Destino[MAXARGS], char *String, char *Origen[MAXARGS]) {

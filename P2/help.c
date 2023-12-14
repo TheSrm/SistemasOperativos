@@ -90,11 +90,11 @@ void imprimirComando(char* cmd){
                "\t-environ: accede usando environ (no lugar do terceiro arg de main)\n"
                "\t-addr: mostra o  valor e donde se almacenan environ e o 3er arg main\n ");
     else if (strcmp(cmd,"fork")==0)
-        printf("Fai fork e queda esperando que seu fillo acabe\n");
+        printf("Crea un novo proceso e queda esperando que acabe\n");
     else if (strcmp(cmd,"exec")==0)
-        printf("Executa sen crear un proceso un programa con argumentos nun entorno uqe so conten VAR1 ,VAR2....\n");
+        printf("Executa un programa sen crear un novo proceso\n");
     else if (strcmp(cmd,"job")==0)
-        printf("Mostra información dun proceso e con -fg pasao a primeiro plano\n");
+        printf("Mostra información dun proceso. con -fg pasa a primeiro plano\n");
     else if (strcmp(cmd,"jobs")==0)
         printf("Mostra a informacion dos procesos en segundo plano\n");
     else if (strcmp(cmd,"deljobs")==0)

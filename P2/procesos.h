@@ -35,6 +35,7 @@ void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1);
 void CmdShowvar(char *argumentos[], char *env[]);
 void CmdShowenv(char *argumentos[], char *env[]);
 void CmdChangevar(char *argumentos[], char *env[]);
+void CmdSubsvar(char *argumentos[], char *env[]);
 void Cmd_fork (char *argumentos[],listaProcesos *listaprocesos1);
 void pid(char* argumentos[MAXARGS]);
 void infosys();

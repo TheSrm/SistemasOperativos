@@ -131,6 +131,8 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
             CmdShowenv(argumentos,env);
         else if (strcmp(argPpal,"changevar")==0)
             CmdChangevar(argumentos,env);
+        else if (strcmp(argPpal,"subsvar")==0)
+            CmdSubsvar(argumentos,env);
         else if (strcmp(argPpal,"job")==0)
             job(argumentos,p);
         else if (strcmp(argPpal,"fork")==0)
