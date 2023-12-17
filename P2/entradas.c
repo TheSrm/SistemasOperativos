@@ -66,6 +66,7 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
             pecharTodoFicheiro(t);
             free(*t);
             pecharTodoBloque(l);
+            VaciarListaProcesos(p);
         } else if (strcmp(argPpal, "hist") == 0) {
             if (argumentos[0] == NULL)
                 imprimirHistorial(*h);
@@ -147,6 +148,7 @@ void procesarEntrada(char *entrada, historial* h, bool* rematado,
             pecharTodoFicheiro(t);
             free(*t);
             pecharTodoBloque(l);
+            VaciarListaProcesos(p);
 
         }else
             ComandoNonConocido(argPpal,argumentos,p);//Se non recoñecemos facemos o da terminal

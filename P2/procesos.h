@@ -32,6 +32,7 @@ void Exec (char *argumentos[]);
 void job (char *argumentos[], listaProcesos *listaProcesos1);
 void crearListaProcesos(listaProcesos *t);
 void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1);
+void VaciarListaProcesos(listaProcesos *listaProcesos1);
 void CmdShowvar(char *argumentos[], char *env[]);
 void CmdShowenv(char *argumentos[], char *env[]);
 void CmdChangevar(char *argumentos[], char *env[]);

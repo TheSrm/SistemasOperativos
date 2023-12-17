@@ -196,17 +196,18 @@ void MostrarEstadoPantalla(Proceso *l) {
             printf(" SIGNALED (%s) %s", NombreSenal(estadoProceso.senal), l->commans_line);
             break;
         case 0:
-            printf(" TERMINADO (000) %s", l->commans_line);
+            printf(" TERMINADO (%d) %s",estadoProceso.senal, l->commans_line);
             break;
         case 2:
-            printf(" STOPPED (0%d) %s", estadoProceso.senal, l->commans_line);
+            printf(" STOPPED (%d) %s", estadoProceso.senal, l->commans_line);
             break;
         case -1:
-            printf(" ACTIVO (000) %s", l->commans_line);
+            printf(" ACTIVO (%d) %s", estadoProceso.senal ,l->commans_line);
             break;
         default:
             printf(" TERMINADO (255)");
-            l->state=10;
+            l->senal=255;
+            l->state=0;
             break;
     }
 
@@ -225,10 +226,11 @@ void MostrarJobs(listaProcesos listaProcesos1){
 
 void VaciarListaProcesos(listaProcesos *cabeza) {
     Proceso *actual = *cabeza;
-    Proceso *siguiente = NULL;  // Cambié el nombre de 'anterior' a 'siguiente'
+    Proceso *siguiente = NULL;
 
     while (actual != NULL) {
         siguiente = actual->next;
+        free(actual->commans_line);
         free(actual);
         actual = siguiente;
     }
@@ -248,10 +250,12 @@ void eliminarElementos(listaProcesos *cabeza, int condicion) {
             // El elemento cumple con la condición, se elimina
             if (anterior == NULL) {
                 *cabeza = actual->next;
+                free(actual->commans_line);
                 free(actual);
                 actual = *cabeza;
             } else {
                 anterior->next = actual->next;
+                free(actual->commans_line);
                 free(actual);
                 actual = anterior->next;
             }
@@ -274,20 +278,25 @@ void insertarListaProcesos(listaProcesos *lista, pid_t pid, int prioridade, char
         fprintf(stderr, "Error: No se pudo asignar memoria para el nuevo proceso.\n");
         return;
     }
-    nuevoBloque->state=1;
+
+    nuevoBloque->state = 1;
     nuevoBloque->pid = pid;
-    nuevoBloque->senal=0;
+    nuevoBloque->senal = 0;
     nuevoBloque->data = time(NULL);
 
-
-    // Concatenar los elementos del array en una sola cadena
     int total_length = 0;
     for (int i = 0; commans_line[i] != NULL; i++) {
-        total_length += strlen(commans_line[i]) + 1; // +1 para el espacio entre palabras
+        total_length += strlen(commans_line[i]) + 1;
     }
 
-    nuevoBloque->commans_line = (char *)malloc(total_length);
-    nuevoBloque->commans_line[0] = '\0'; // Inicializar la cadena
+    nuevoBloque->commans_line = (char *)malloc(total_length + 1);
+    if (nuevoBloque->commans_line == NULL) {
+        fprintf(stderr, "Error: No se pudo asignar memoria para commans_line.\n");
+        free(nuevoBloque);
+        return;
+    }
+
+    nuevoBloque->commans_line[0] = '\0';
 
     for (int i = 0; commans_line[i] != NULL; i++) {
         strcat(nuevoBloque->commans_line, commans_line[i]);
@@ -299,12 +308,11 @@ void insertarListaProcesos(listaProcesos *lista, pid_t pid, int prioridade, char
     if (*lista == NULL) {
         *lista = nuevoBloque;
     } else {
-        // Encontrar el final de la lista
         for (; temp2->next != NULL; temp2 = temp2->next);
-        // Enlazar el nuevo bloque al final de la lista
         temp2->next = nuevoBloque;
     }
 }
+
 
 void pid(char *argumentos[MAXARGS]) {
     pid_t process_id=getpid();
@@ -421,6 +429,7 @@ int CambiarVariable(char * var, char * valor, char *e[]) /*cambia una variable e
     strcat(aux,valor);
     e[pos]=aux;
     return (pos);
+
 }
 
 void CmdChangevar(char *argumentos[], char *env[]){
@@ -538,7 +547,6 @@ void EliminarJobs (char *argumentos[], listaProcesos *listaProcesos1){
         else if (strcmp(argumentos[0], "-sig")==0) {
             eliminarElementos( listaProcesos1, 1);
         }
-
     }
 
 }

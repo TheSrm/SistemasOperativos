@@ -111,7 +111,7 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
     nuevoBloque->nombreDocumento=NULL;
     char * name = strdup(nombre);
     if (nombre != NULL) {
-        nuevoBloque->nombreDocumento=name;
+        strcpy(nuevoBloque,name);
         if (nuevoBloque->nombreDocumento == NULL) {
             perror("Error al duplicar la cadena");
             free(nuevoBloque);
@@ -240,7 +240,7 @@ void eliminarDocumento(int key, listaBloques *lista) {
     }
 
     // Liberar memoria del campo nombreDocumento
-    free(actual->nombreDocumento);
+    
 
     // Eliminar el nodo de la lista
     if (anterior == NULL) {
@@ -251,6 +251,7 @@ void eliminarDocumento(int key, listaBloques *lista) {
 
 
     // Liberar memoria del nodo actual
+    free(actual->nombreDocumento);
     free(actual);
 }
 
