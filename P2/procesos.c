@@ -196,18 +196,17 @@ void MostrarEstadoPantalla(Proceso *l) {
             printf(" SIGNALED (%s) %s", NombreSenal(estadoProceso.senal), l->commans_line);
             break;
         case 0:
-            printf(" TERMINADO (%d) %s",estadoProceso.senal, l->commans_line);
+            printf(" TERMINADO (000) %s", l->commans_line);
             break;
         case 2:
-            printf(" STOPPED (%d) %s", estadoProceso.senal, l->commans_line);
+            printf(" STOPPED (0%d) %s", estadoProceso.senal, l->commans_line);
             break;
         case -1:
-            printf(" ACTIVO (%d) %s", estadoProceso.senal ,l->commans_line);
+            printf(" ACTIVO (000) %s", l->commans_line);
             break;
         default:
             printf(" TERMINADO (255)");
-            l->senal=255;
-            l->state=0;
+            l->state=10;
             break;
     }
 
@@ -603,7 +602,6 @@ void job (char *argumentos[], listaProcesos *listaProcesos1){
      perror("Error ejecutando el comando");
      exit(EXIT_FAILURE);
  }
-
 
 
 
