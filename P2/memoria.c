@@ -26,6 +26,7 @@ void liberarBloqueMemoriaMalloc(listaBloques bloque) {
 
 
     free(bloque->direccion);
+    free(bloque->nombreDocumento);
     free(bloque);
 }
 
@@ -109,9 +110,13 @@ void insertarElemento(listaBloques *lista, void *direccion, long tamanoBloque, c
     nuevoBloque->tamanoBloque = tamanoBloque;
     nuevoBloque->tipoAsignacion = tipoAsignacion;
     nuevoBloque->nombreDocumento=NULL;
+    
+    
     char * name = strdup(nombre);
+    nuevoBloque->nombreDocumento=name;
+    
     if (nombre != NULL) {
-        strcpy(nuevoBloque,name);
+        
         if (nuevoBloque->nombreDocumento == NULL) {
             perror("Error al duplicar la cadena");
             free(nuevoBloque);
@@ -405,7 +410,7 @@ void eliminarClave(int clave, listaBloques *lista) {
     } else {
         anterior->next = l->next;
     }
-
+    free(l->nombreDocumento);
     free(l);
 }
 
