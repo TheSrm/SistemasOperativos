@@ -5,7 +5,9 @@ Esta práctica consiste en la creación de una terminal sencilla que emula el co
 >  Aunque no se han implementado todas las funcionalidades de una shell real, esta versión cuenta con una opción `help` que te permitirá consultar qué comandos están actualmente disponibles.
 ## 👥 Colaboradores
 
-- [@DanielRuibal](https://github.com/DanielRuibal) 
+[![DanielRuibal](https://github.com/DanielRuibal.png?size=100)](https://github.com/DanielRuibal)  
+[DanielRuibal](https://github.com/DanielRuibal) 
+
 
 ---
 
